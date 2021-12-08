@@ -18,30 +18,29 @@ all: lib install example
 
 lib: superlulib
 
-example: install
-	$(MAKE) -C EXAMPLE
+example:
+	( cd EXAMPLE; $(MAKE) )
 
 clean: cleanlib cleantesting
 
-# install:
-# 	( cd INSTALL; $(MAKE) )
-# #	( cd INSTALL; cp lsame.c ../SRC/; \
-# #	  cp dlamch.c ../SRC/; cp slamch.c ../SRC/ )
+install:
+	( cd INSTALL; $(MAKE) )
+#	( cd INSTALL; cp lsame.c ../SRC/; \
+#	  cp dlamch.c ../SRC/; cp slamch.c ../SRC/ )
 
-install : lib
-	$(MAKE) -C SRC install
-
-# blaslib:
-# 	( cd CBLAS; $(MAKE) )
+blaslib:
+	( cd CBLAS; $(MAKE) )
 
 superlulib:
-	$(MAKE) -C SRC
+	( cd SRC; $(MAKE) )
 
 cleanlib:
-	$(MAKE) -C SRC clean
-	rm -rf include lib
+	( cd SRC; $(MAKE) clean )
+	( cd CBLAS; $(MAKE) clean )
+	( cd lib; rm -f *.a )
 
 cleantesting:
-	$(MAKE) -C EXAMPLE clean
-	$(MAKE) -C FORTRAN clean
-	$(MAKE) -C TEST clean
+	( cd INSTALL; $(MAKE) clean )
+	( cd EXAMPLE; $(MAKE) clean )
+	( cd FORTRAN; $(MAKE) clean )
+	( cd TEST; $(MAKE) clean )
