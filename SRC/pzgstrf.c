@@ -1294,7 +1294,7 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 #endif
 			{
 #if defined(USE_SW) && defined(OPT_pzgstrs2)
-                            pzgstrs2_sw (kk0, kk, Glu_persist, grid, Llu,
+                            sw_pzgstrs2 (kk0, kk, Glu_persist, grid, Llu,
                                         Ublock_info, stat);
 #else
                             pzgstrs2_omp (kk0, kk, Glu_persist, grid, Llu,
@@ -1465,7 +1465,7 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 #endif
                 {
 #if defined(USE_SW) && defined(OPT_pzgstrs2)
-                    pzgstrs2_sw (k0, k, Glu_persist, grid, Llu, 
+                    sw_pzgstrs2 (k0, k, Glu_persist, grid, Llu, 
 		                    Ublock_info, stat);
 #else
                     pzgstrs2_omp (k0, k, Glu_persist, grid, Llu, 

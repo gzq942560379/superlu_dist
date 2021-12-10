@@ -140,7 +140,7 @@ at the top-level directory.
 /*****************************************************************************
  * The following pdgstrf2_sw is improved for SW by guozhuoqiang
  *****************************************************************************/
-void pzgstrs2_sw
+void sw_pzgstrs2
 (int_t k0, int_t k, Glu_persist_t * Glu_persist, gridinfo_t * grid,
  zLocalLU_t * Llu, Ublock_info_t *Ublock_info, SuperLUStat_t * stat)
 {
