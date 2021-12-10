@@ -1078,15 +1078,8 @@ extern int_t ancestorFactor(
     double thresh,  SCT_t *SCT, int tag_ub, int *info
 );
 
-
-
-
 /*=====================*/
 #endif  // end 3D prototypes
-
-#ifdef USE_SW
-#include "sw/superlu_zdefs_sw.h"
-#endif
 
 #ifdef __cplusplus
   }

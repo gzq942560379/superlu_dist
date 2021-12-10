@@ -1293,13 +1293,8 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 /* #pragma omp parallel */ /* Sherry -- parallel done inside pzgstrs2 */
 #endif
 			{
-#if defined(USE_SW) && defined(OPT_pzgstrs2)
-                            pzgstrs2_sw (kk0, kk, Glu_persist, grid, Llu,
-                                        Ublock_info, stat);
-#else
                             pzgstrs2_omp (kk0, kk, Glu_persist, grid, Llu,
                                         Ublock_info, stat);
-#endif
                         }
 
                         pdgstrs2_timer += SuperLU_timer_()-ttt2;
@@ -1464,13 +1459,8 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 /* #pragma omp parallel */ /* Sherry -- parallel done inside pzgstrs2 */
 #endif
                 {
-#if defined(USE_SW) && defined(OPT_pzgstrs2)
-                    pzgstrs2_sw (k0, k, Glu_persist, grid, Llu, 
-		                    Ublock_info, stat);
-#else
                     pzgstrs2_omp (k0, k, Glu_persist, grid, Llu, 
 		                    Ublock_info, stat);
-#endif
                 }
                 pdgstrs2_timer += SuperLU_timer_() - ttt2;
 
