@@ -28,53 +28,86 @@
 include ../make.inc
 
 DSUPERLULIB = libsuperlu_dist.a
+
+INCLUDEDIR += -I$(SUPERLU_ROOT)/SRC
+
 #
 # Precision independent routines
 #
-ALLAUX 	= sp_ienv.o etree.o sp_colorder.o get_perm_c.o \
-	  colamd.o mmd.o comm.o memory.o util.o superlu_grid.o \
-	  pxerr_dist.o superlu_timer.o symbfact.o \
-	  psymbfact.o psymbfact_util.o get_perm_c_parmetis.o mc64ad_dist.o \
-	  xerr_dist.o smach_dist.o dmach_dist.o \
-	  superlu_dist_version.o comm_tree.o
+ALLAUX 	= sp_ienv.c etree.c sp_colorder.c get_perm_c.c \
+	  colamd.c mmd.c comm.c memory.c util.c superlu_grid.c \
+	  pxerr_dist.c superlu_timer.c symbfact.c \
+	  psymbfact.c psymbfact_util.c get_perm_c_parmetis.c mc64ad_dist.c \
+	  xerr_dist.c smach_dist.c dmach_dist.c \
+	  superlu_dist_version.c comm_tree.c
 
 ifeq ($(HAVE_CUDA),TRUE)
-ALLAUX += gpublas_utils.o pdgstrs_lsum_cuda.o pdgstrs_lsum_cuda_dlink.o
+ALLAUX += gpublas_utils.c pdgstrs_lsum_cuda.c pdgstrs_lsum_cuda_dlink.c
 endif
 
 #
 # Routines literally taken from SuperLU, but renamed with suffix _dist
 #
-DSLUSRC	= dlangs_dist.o dgsequ_dist.o dlaqgs_dist.o dutil_dist.o \
-	  dmemory_dist.o dmyblas2_dist.o dsp_blas2_dist.o dsp_blas3_dist.o
-ZSLUSRC	= dcomplex_dist.o zlangs_dist.o zgsequ_dist.o zlaqgs_dist.o \
-	  zutil_dist.o zmemory_dist.o zmyblas2_dist.o \
-	  zsp_blas2_dist.o zsp_blas3_dist.o
+DSLUSRC	= dlangs_dist.c dgsequ_dist.c dlaqgs_dist.c dutil_dist.c \
+	  dmemory_dist.c dmyblas2_dist.c dsp_blas2_dist.c dsp_blas3_dist.c
+ZSLUSRC	= dcomplex_dist.c zlangs_dist.c zgsequ_dist.c zlaqgs_dist.c \
+	  zutil_dist.c zmemory_dist.c zmyblas2_dist.c \
+	  zsp_blas2_dist.c zsp_blas3_dist.c
 
 #
 # Routines for double precision parallel SuperLU
-DPLUSRC = pdgssvx.o pdgssvx_ABglobal.o \
-	  dreadhb.o dreadrb.o dreadtriple.o dreadMM.o dbinary_io.o \
-	  pdgsequ.o pdlaqgs.o dldperm_dist.o pdlangs.o pdutil.o \
-	  pdsymbfact_distdata.o ddistribute.o pddistribute.o \
-	  pdgstrf.o dstatic_schedule.o pdgstrf2.o pdGetDiagU.o \
-	  pdgstrs.o pdgstrs1.o pdgstrs_lsum.o pdgstrs_Bglobal.o \
-	  pdgsrfs.o pdgsmv.o pdgsrfs_ABXglobal.o pdgsmv_AXglobal.o \
-	  dreadtriple_noheader.o
+DPLUSRC = pdgssvx.c pdgssvx_ABglobal.c \
+	  dreadhb.c dreadrb.c dreadtriple.c dreadMM.c dbinary_io.c \
+	  pdgsequ.c pdlaqgs.c dldperm_dist.c pdlangs.c pdutil.c \
+	  pdsymbfact_distdata.c ddistribute.c pddistribute.c \
+	  pdgstrf.c dstatic_schedule.c pdgstrf2.c pdGetDiagU.c \
+	  pdgstrs.c pdgstrs1.c pdgstrs_lsum.c pdgstrs_Bglobal.c \
+	  pdgsrfs.c pdgsmv.c pdgsrfs_ABXglobal.c pdgsmv_AXglobal.c \
+	  dreadtriple_noheader.c
 #
 # Routines for double complex parallel SuperLU
-ZPLUSRC = pzgssvx.o pzgssvx_ABglobal.o \
-	  zreadhb.o zreadrb.o zreadtriple.o zreadMM.o zbinary_io.o\
-	  pzgsequ.o pzlaqgs.o zldperm_dist.o pzlangs.o pzutil.o \
-	  pzsymbfact_distdata.o zdistribute.o pzdistribute.o \
-	  pzgstrf.o zstatic_schedule.o pzgstrf2.o pzGetDiagU.o \
-	  pzgstrs.o pzgstrs1.o pzgstrs_lsum.o pzgstrs_Bglobal.o \
-	  pzgsrfs.o pzgsmv.o pzgsrfs_ABXglobal.o pzgsmv_AXglobal.o \
-	  zreadtriple_noheader.o
+ZPLUSRC = pzgssvx.c pzgssvx_ABglobal.c \
+	  zreadhb.c zreadrb.c zreadtriple.c zreadMM.c zbinary_io.c\
+	  pzgsequ.c pzlaqgs.c zldperm_dist.c pzlangs.c pzutil.c \
+	  pzsymbfact_distdata.c zdistribute.c pzdistribute.c \
+	  pzgstrf.c zstatic_schedule.c pzgstrf2.c pzGetDiagU.c \
+	  pzgstrs.c pzgstrs1.c pzgstrs_lsum.c pzgstrs_Bglobal.c \
+	  pzgsrfs.c pzgsmv.c pzgsrfs_ABXglobal.c pzgsmv_AXglobal.c \
+	  zreadtriple_noheader.c
 
-ifeq ($(HAVE_COMBBLAS),TRUE)
-DPLUSRC += d_c2cpp_GetHWPM.o
-ZPLUSRC += z_c2cpp_GetHWPM.o
+
+# ifeq ($(HAVE_COMBBLAS),TRUE)
+# DPLUSRC += d_c2cpp_GetHWPM.cpp
+# ZPLUSRC += z_c2cpp_GetHWPM.cpp
+# endif
+
+ALLAUXOBJ=$(patsubst %.c, %.o, $(ALLAUX))
+DSLUOBJ=$(patsubst %.c, %.o, $(DSLUSRC))
+ZSLUOBJ=$(patsubst %.c, %.o, $(ZSLUSRC))
+DPLUOBJ=$(patsubst %.c, %.o, $(DPLUSRC))
+ZPLUOBJ=$(patsubst %.c, %.o, $(ZPLUSRC))
+
+ALLOBJ = ${ALLAUXOBJ} ${DSLUOBJ} ${ZSLUOBJ} ${DPLUOBJ} ${ZPLUOBJ}
+
+
+ifeq ($(HAVE_SW), TRUE)
+	HOST_DPLUDIR = sw/host/double
+	HOST_ZPLUDIR = sw/host/doublecomplex
+	SLAVE_DPLUDIR = sw/host/double
+	SLAVE_ZPLUDIR = sw/host/doublecomplex
+
+	HOST_DPLUSRC = $(shell find $(HOST_DPLUDIR) -name "*.c")
+	HOST_ZPLUSRC = $(shell find $(HOST_ZPLUDIR) -name "*.c")
+	SLAVE_DPLUSRC = $(shell find $(SLAVE_DPLUDIR) -name "*.c")
+	SLAVE_ZPLUSRC = $(shell find $(SLAVE_ZPLUDIR) -name "*.c")
+
+	HOST_DPLUOBJ = $(patsubst %.c, %.o, $(HOST_DPLUSRC))
+	HOST_ZPLUOBJ = $(patsubst %.c, %.o, $(HOST_ZPLUSRC))
+	SLAVE_DPLUOBJ = $(patsubst %.c, %.o, $(SLAVE_DPLUSRC))
+	SLAVE_ZPLUOBJ = $(patsubst %.c, %.o, $(SLAVE_ZPLUSRC))
+
+	HOST_OBJ = ${HOST_DPLUOBJ} ${HOST_ZPLUOBJ}
+	SLAVE_OBJ = ${SLAVE_DPLUOBJ} ${SLAVE_DPLUOBJ}
 endif
 
 all:  double complex16
@@ -107,14 +140,14 @@ endif
 #config_h:
 #	cp -f superlu_dist_config_for_makefile.h superlu_dist_config.h
 
-double: config_h $(DSLUSRC) $(DPLUSRC) $(ALLAUX)
+double: config_h $(DSLUOBJ) $(DPLUOBJ) $(ALLAUXOBJ) ${HOST_DPLUOBJ} ${SLAVE_DPLUOBJ}
 	$(ARCH) $(ARCHFLAGS) $(DSUPERLULIB) \
-		$(DSLUSRC) $(DPLUSRC) $(ALLAUX)
+		$(DSLUOBJ) $(DPLUOBJ) $(ALLAUXOBJ)  ${HOST_DPLUOBJ} ${SLAVE_DPLUOBJ}
 	$(RANLIB) $(DSUPERLULIB)
 
-complex16: config_h $(ZSLUSRC) $(ZPLUSRC) $(ALLAUX)
+complex16: config_h $(ZSLUOBJ) $(ZPLUOBJ) $(ALLAUXOBJ) ${HOST_ZPLUOBJ} ${SLAVE_ZPLUOBJ}
 	$(ARCH) $(ARCHFLAGS) $(DSUPERLULIB) \
-		$(ZSLUSRC) $(ZPLUSRC) $(ALLAUX)
+		$(ZSLUOBJ) $(ZPLUOBJ) $(ALLAUXOBJ) ${HOST_ZPLUOBJ} ${SLAVE_ZPLUOBJ}
 	$(RANLIB) $(DSUPERLULIB)
 
 pdgstrf.o: dscatter.c dlook_ahead_update.c dSchCompUdt-2Ddynamic.c pdgstrf.c
@@ -123,28 +156,37 @@ pdgstrf.o: dscatter.c dlook_ahead_update.c dSchCompUdt-2Ddynamic.c pdgstrf.c
 pzgstrf.o: zscatter.c zlook_ahead_update.c zSchCompUdt-2Ddynamic.c pzgstrf.c
 	$(CC) $(CFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c pzgstrf.c $(VERBOSE)
 
-.c.o:
-	$(CC) $(CFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE)
-
 pdgstrs_lsum_cuda.o: pdgstrs_lsum_cuda.cu
 	$(NVCC) $(CUDACFLAGS) -dc $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c pdgstrs_lsum_cuda.cu $(VERBOSE)
 
 pdgstrs_lsum_cuda_dlink.o:	
 	$(NVCC) $(CUDACFLAGS) -dlink $(CUDALIBS) -o pdgstrs_lsum_cuda_dlink.o pdgstrs_lsum_cuda.o $(VERBOSE)	
-	
-	
-.cpp.o:
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE)
 
-.f.o:
-	$(FORTRAN) $(FFLAGS) -c $< $(VERBOSE)
+${ALLOBJ} : %.o : %.c
+	$(CC) $(CFLAGS) $(SW_HOST_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE) -o $@
+
+# %.o : %.cpp
+# 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE)
+
+# %.o : %.f
+# 	$(FORTRAN) $(FFLAGS) -c $< $(VERBOSE)
+
+${HOST_OBJ} : %.o : %.c
+	$(CC) $(CFLAGS) $(SW_HOST_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE) -o $@
+
+${SLAVE_OBJ} : %.o : %.c
+	$(CC) $(CFLAGS) $(SW_SLAVE_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE) -o $@
+
+header_file=$(shell find . -name "*.h")
 
 install: 
-	@mkdir -p $(INCLUDE_DIR)
-	@mkdir -p $(LIB_DIR)
-	cp *.h $(INCLUDE_DIR)
+	mkdir -p $(INCLUDE_DIR)
+	mkdir -p $(LIB_DIR)
+	cp --path $(header_file) $(INCLUDE_DIR)
 	cp $(DSUPERLULIB) $(LIB_DIR)
 
 
+ALLOBJ = $(shell find . -name "*.o")
+
 clean:	
-	rm -f *.o $(DSUPERLULIB) superlu_dist_config.h
+	rm -f $(ALLOBJ) $(DSUPERLULIB) superlu_dist_config.h
