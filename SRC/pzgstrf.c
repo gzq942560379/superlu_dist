@@ -106,7 +106,8 @@ at the top-level directory.
  *
  * </pre>
  */
-
+#include <assert.h>  /* assertion doesn't work if NDEBUG is defined */
+#include <stdbool.h> 
 #include <math.h>
 /*#include "mkl.h"*/
 #include "superlu_zdefs.h"
@@ -115,6 +116,10 @@ at the top-level directory.
 // #define NUM_GPU_STREAMS 16
 // #define NUM_GPU_STREAMS 16
 #include "gpublas_utils.h"
+#endif
+
+#ifdef USE_SW
+#include "sw/slave_kernel.h"
 #endif
 
 /* Various defininations     */
@@ -1633,8 +1638,14 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 /************************************************************************/
             double ttx =SuperLU_timer_();
 
-//#include "zlook_ahead_update_v4.c"
+// #ifdef USE_SW
+// //#include "zlook_ahead_update_v4.c"
+// #include "sw/host/zlook_ahead_update_sw.c"
+// #endif
+
+// #if !defined(USE_SW)
 #include "zlook_ahead_update.c"
+// #endif
 
             lookaheadupdatetimer += SuperLU_timer_() - ttx;
 /************************************************************************/
@@ -1737,13 +1748,16 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 
 #include "zSchCompUdt-gpu.c"
 
-#else
+#endif
 
+#ifdef USE_SW
+#include "sw/host/zSchCompUdt-2Ddynamic-sw.c"
+#endif
 /*#include "SchCompUdt--Phi-2Ddynamic-alt.c"*/
 //#include "zSchCompUdt-2Ddynamic_v6.c"
 
+#if !defined(GPU_ACC) && !defined(USE_SW)
 #include "zSchCompUdt-2Ddynamic.c"
-
 #endif
 	/*uncomment following to compare against SuperLU 3.3 baseline*/
         /* #include "SchCompUdt--baseline.c"  */

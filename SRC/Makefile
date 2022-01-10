@@ -75,11 +75,14 @@ ZPLUSRC = pzgssvx.c pzgssvx_ABglobal.c \
 	  pzgsrfs.c pzgsmv.c pzgsrfs_ABXglobal.c pzgsmv_AXglobal.c \
 	  zreadtriple_noheader.c
 
-
 # ifeq ($(HAVE_COMBBLAS),TRUE)
 # DPLUSRC += d_c2cpp_GetHWPM.cpp
 # ZPLUSRC += z_c2cpp_GetHWPM.cpp
 # endif
+
+PZGSTRF_SRC = pzgstrf.c zSchCompUdt-2Ddynamic.c zlook_ahead_update.c
+PDGSTRF_SRC = pdgstrf.c dlook_ahead_update.c dSchCompUdt-2Ddynamic.c
+			  
 
 ALLAUXOBJ=$(patsubst %.c, %.o, $(ALLAUX))
 DSLUOBJ=$(patsubst %.c, %.o, $(DSLUSRC))
@@ -89,12 +92,11 @@ ZPLUOBJ=$(patsubst %.c, %.o, $(ZPLUSRC))
 
 ALLOBJ = ${ALLAUXOBJ} ${DSLUOBJ} ${ZSLUOBJ} ${DPLUOBJ} ${ZPLUOBJ}
 
-
 ifeq ($(HAVE_SW), TRUE)
 	HOST_DPLUDIR = sw/host/double
 	HOST_ZPLUDIR = sw/host/doublecomplex
-	SLAVE_DPLUDIR = sw/host/double
-	SLAVE_ZPLUDIR = sw/host/doublecomplex
+	SLAVE_DPLUDIR = sw/slave/double
+	SLAVE_ZPLUDIR = sw/slave/doublecomplex
 
 	HOST_DPLUSRC = $(shell find $(HOST_DPLUDIR) -name "*.c")
 	HOST_ZPLUSRC = $(shell find $(HOST_ZPLUDIR) -name "*.c")
@@ -107,7 +109,10 @@ ifeq ($(HAVE_SW), TRUE)
 	SLAVE_ZPLUOBJ = $(patsubst %.c, %.o, $(SLAVE_ZPLUSRC))
 
 	HOST_OBJ = ${HOST_DPLUOBJ} ${HOST_ZPLUOBJ}
-	SLAVE_OBJ = ${SLAVE_DPLUOBJ} ${SLAVE_DPLUOBJ}
+	SLAVE_OBJ = ${SLAVE_DPLUOBJ} ${SLAVE_ZPLUOBJ}
+
+	PZGSTRF_SRC += sw/host/zlook_ahead_update_sw.c sw/host/zSchCompUdt-2Ddynamic-sw.c 
+	PDGSTRF_SRC += 
 endif
 
 all:  double complex16
@@ -150,17 +155,17 @@ complex16: config_h $(ZSLUOBJ) $(ZPLUOBJ) $(ALLAUXOBJ) ${HOST_ZPLUOBJ} ${SLAVE_Z
 		$(ZSLUOBJ) $(ZPLUOBJ) $(ALLAUXOBJ) ${HOST_ZPLUOBJ} ${SLAVE_ZPLUOBJ}
 	$(RANLIB) $(DSUPERLULIB)
 
-pdgstrf.o: dscatter.c dlook_ahead_update.c dSchCompUdt-2Ddynamic.c pdgstrf.c
+pdgstrf.o: $(PDGSTRF_SRC)
 	$(CC) $(CFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c pdgstrf.c $(VERBOSE)
 
-pzgstrf.o: zscatter.c zlook_ahead_update.c zSchCompUdt-2Ddynamic.c pzgstrf.c
+pzgstrf.o: $(PZGSTRF_SRC)
 	$(CC) $(CFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c pzgstrf.c $(VERBOSE)
 
-pdgstrs_lsum_cuda.o: pdgstrs_lsum_cuda.cu
-	$(NVCC) $(CUDACFLAGS) -dc $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c pdgstrs_lsum_cuda.cu $(VERBOSE)
+# pdgstrs_lsum_cuda.o: pdgstrs_lsum_cuda.cu
+# 	$(NVCC) $(CUDACFLAGS) -dc $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c pdgstrs_lsum_cuda.cu $(VERBOSE)
 
-pdgstrs_lsum_cuda_dlink.o:	
-	$(NVCC) $(CUDACFLAGS) -dlink $(CUDALIBS) -o pdgstrs_lsum_cuda_dlink.o pdgstrs_lsum_cuda.o $(VERBOSE)	
+# pdgstrs_lsum_cuda_dlink.o:	
+# 	$(NVCC) $(CUDACFLAGS) -dlink $(CUDALIBS) -o pdgstrs_lsum_cuda_dlink.o pdgstrs_lsum_cuda.o $(VERBOSE)	
 
 ${ALLOBJ} : %.o : %.c
 	$(CC) $(CFLAGS) $(SW_HOST_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE) -o $@
@@ -184,7 +189,6 @@ install:
 	mkdir -p $(LIB_DIR)
 	cp --path $(header_file) $(INCLUDE_DIR)
 	cp $(DSUPERLULIB) $(LIB_DIR)
-
 
 ALLOBJ = $(shell find . -name "*.o")
 

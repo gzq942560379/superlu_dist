@@ -886,10 +886,6 @@ extern yes_no_t C_BcTree_IsRoot(C_Tree* tree);
 extern void C_BcTree_forwardMessageSimple(C_Tree* tree, void* localBuffer, int msgSize);
 extern void C_BcTree_waitSendRequest(C_Tree* tree);
 
-#ifdef USE_SW
-#include "sw/superlu_defs_sw.h"
-#endif
-
 #ifdef __cplusplus
   }
 #endif
