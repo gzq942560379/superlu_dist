@@ -815,10 +815,13 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
     bigV = NULL;
 
 #if ( PRNTlevel>=1 )
-    if(!iam) printf("\t.. GEMM buffer size: max_row_size X max_ncols = %d x " IFMT "\n",
-	     		  max_row_size, max_ncols);
-    printf("[%d].. BIG U size " IFMT " (on CPU)\n", iam, bigu_size);
-    fflush(stdout);
+    if(iam == 0){
+        printf("\t.. GEMM buffer size: max_row_size X max_ncols = %d x " IFMT "\n",
+                    max_row_size, max_ncols);
+        printf("[%d].. BIG U size " IFMT " (on CPU)\n", iam, bigu_size);
+        fflush(stdout);
+    }
+
 #endif
 
 #ifdef GPU_ACC /*-- use GPU --*/
@@ -831,8 +834,10 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 #endif
 
 #if ( PRNTlevel>=1 )
-    printf("[%d].. BIG V size %d (on CPU), dC buffer_size %d (on GPU)\n", iam, bigv_size, buffer_size);
-    fflush(stdout);
+    if(iam == 0){
+        printf("[%d].. BIG V size %d (on CPU), dC buffer_size %d (on GPU)\n", iam, bigv_size, buffer_size);
+        fflush(stdout);
+    }
 #endif
     if ( checkGPU(gpuHostMalloc((void**)&bigV, bigv_size * sizeof(doublecomplex) ,gpuHostMallocDefault)) )
         ABORT("Malloc fails for zgemm buffer V");
@@ -894,8 +899,10 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
     bigv_size += (gemm_m_pad * (j + max_row_size + gemm_n_pad));
 
 #if ( PRNTlevel>=1 )
-    printf("[%d].. BIG V size %d (on CPU)\n", iam, bigv_size);
-    fflush(stdout);
+    if(iam == 0){
+        printf("[%d].. BIG V size %d (on CPU)\n", iam, bigv_size);
+        fflush(stdout);
+    }
 #endif
 
 //#ifdef __INTEL_COMPILER

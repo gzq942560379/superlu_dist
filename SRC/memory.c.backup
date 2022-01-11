@@ -321,7 +321,6 @@ int_t symbfact_SubInit
 	}
 	
 #if ( PRNTlevel>=2 )
-	if(iam == 0)
 	printf(".. symbfact_SubInit(): annz %ld, nzlmax %ld, nzumax %ld\n", 
 		annz, nzlmax, nzumax);
 #endif	
