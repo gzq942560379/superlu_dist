@@ -439,7 +439,7 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 #endif
 #if (PROFlevel >= 1 )
     gemm_stats = (gemm_profile *) SUPERLU_MALLOC(nsupers * sizeof(gemm_profile));
-    if (iam == 0) fgemm = fopen("dgemm_mnk.dat", "w");
+    // if (iam == 0) fgemm = fopen("dgemm_mnk.dat", "w");
     int *prof_sendR = intCalloc_dist(nsupers);
 #endif
 
@@ -1982,11 +1982,11 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 	    //#include <float.h>
 	    //int Digs = DECIMAL_DIG;
 	    printf("gemm_count %d\n", gemm_count);
-	    for (i = 0; i < gemm_count; ++i)
-		fprintf(fgemm, "%8d%8d%8d\t %20.16e\t%8d\n", gemm_stats[i].m, gemm_stats[i].n,
-			gemm_stats[i].k, gemm_stats[i].microseconds, prof_sendR[i]);
+	    // for (i = 0; i < gemm_count; ++i)
+		// fprintf(fgemm, "%8d%8d%8d\t %20.16e\t%8d\n", gemm_stats[i].m, gemm_stats[i].n,
+		// 	gemm_stats[i].k, gemm_stats[i].microseconds, prof_sendR[i]);
 
-	    fclose(fgemm);
+	    // fclose(fgemm);
         }
 	SUPERLU_FREE(gemm_stats);
 	SUPERLU_FREE(prof_sendR);
