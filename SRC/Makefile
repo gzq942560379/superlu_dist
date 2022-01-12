@@ -115,6 +115,20 @@ ifeq ($(HAVE_SW), TRUE)
 	PDGSTRF_SRC += 
 endif
 
+ifeq ($(HAVE_FUGAKU), TRUE)
+	HOST_DPLUDIR = fugaku/double
+	HOST_ZPLUDIR = fugaku/doublecomplex
+
+	HOST_DPLUSRC = $(shell find $(HOST_DPLUDIR) -name "*.c")
+	HOST_ZPLUSRC = $(shell find $(HOST_ZPLUDIR) -name "*.c")
+
+	HOST_DPLUOBJ = $(patsubst %.c, %.o, $(HOST_DPLUSRC))
+	HOST_ZPLUOBJ = $(patsubst %.c, %.o, $(HOST_ZPLUSRC))
+
+	HOST_OBJ = ${HOST_DPLUOBJ} ${HOST_ZPLUOBJ}
+
+endif
+
 all:  double complex16
 
 config_h:

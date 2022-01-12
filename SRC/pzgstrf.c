@@ -122,6 +122,7 @@ at the top-level directory.
 #include "sw/slave_kernel.h"
 #endif
 
+
 /* Various defininations     */
 /*
     Name    : SUPERNODE_PROFILE
@@ -1308,6 +1309,9 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 #if defined(USE_SW) && defined(OPT_pzgstrs2)
                             sw_pzgstrs2 (kk0, kk, Glu_persist, grid, Llu,
                                         Ublock_info, stat);
+#elif defined(USE_FUGAKU) && defined(OPT_pzgstrs2)
+                            fgk_pzgstrs2 (kk0, kk, Glu_persist, grid, Llu,
+                                        Ublock_info, stat);
 #else
                             pzgstrs2_omp (kk0, kk, Glu_persist, grid, Llu,
                                         Ublock_info, stat);
@@ -1478,6 +1482,9 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
                 {
 #if defined(USE_SW) && defined(OPT_pzgstrs2)
                     sw_pzgstrs2 (k0, k, Glu_persist, grid, Llu, 
+		                    Ublock_info, stat);
+#elif defined(USE_FUGAKU) && defined(OPT_pzgstrs2)
+                    fgk_pzgstrs2 (k0, k, Glu_persist, grid, Llu, 
 		                    Ublock_info, stat);
 #else
                     pzgstrs2_omp (k0, k, Glu_persist, grid, Llu, 
