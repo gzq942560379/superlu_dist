@@ -126,6 +126,7 @@ ifeq ($(HAVE_FUGAKU), TRUE)
 	HOST_ZPLUOBJ = $(patsubst %.c, %.o, $(HOST_ZPLUSRC))
 
 	HOST_OBJ = ${HOST_DPLUOBJ} ${HOST_ZPLUOBJ}
+	PZGSTRF_SRC += fugaku/zSchCompUdt-2Ddynamic-fgk.c 
 
 endif
 

@@ -1767,10 +1767,14 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 #ifdef USE_SW
 #include "sw/host/zSchCompUdt-2Ddynamic-sw.c"
 #endif
+
+#ifdef USE_FUGAKU
+#include "fugaku/zSchCompUdt-2Ddynamic-fgk.c"
+#endif
 /*#include "SchCompUdt--Phi-2Ddynamic-alt.c"*/
 //#include "zSchCompUdt-2Ddynamic_v6.c"
 
-#if !defined(GPU_ACC) && !defined(USE_SW)
+#if !defined(GPU_ACC) && !defined(USE_SW) && !defined(USE_FUGAKU)
 #include "zSchCompUdt-2Ddynamic.c"
 #endif
 	/*uncomment following to compare against SuperLU 3.3 baseline*/
