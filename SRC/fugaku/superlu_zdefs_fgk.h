@@ -18,6 +18,7 @@ static void zMatrix_init(zMatrix_t* matirx, int row, int col, int ld, doublecomp
 static void zMatrix_set_val(zMatrix_t* matirx, doublecomplex* val){
         matirx->val = val;
 }
+
 void fgk_pzgstrs2(int_t k0, int_t k, Glu_persist_t *, gridinfo_t *,
         zLocalLU_t *, Ublock_info_t *, SuperLUStat_t *);
 void 
@@ -53,3 +54,4 @@ zscatter_u_fugaku (int ib,
            doublecomplex* tempv,
            int_t ** Ufstnz_br_ptr, doublecomplex **Unzval_br_ptr,
            gridinfo_t * grid);
+           

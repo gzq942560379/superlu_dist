@@ -118,10 +118,10 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
     }  /* for i ... set up pointers for all blocks in L(:,k) */
 
 	for(int i = 1;i<lookAheadBlk;i++){
-		assert(lookAhead_block_ids[i] = lookAhead_block_ids[i-1] + 1);
+		assert(lookAhead_block_ids[i] == lookAhead_block_ids[i-1] + 1);
 	}
 	for(int i = 1;i<RemainBlk;i++){
-		assert(Remain_block_ids[i] = Remain_block_ids[i-1] + 1);
+		assert(Remain_block_ids[i] == Remain_block_ids[i-1] + 1);
 	}	
 
 	SUPERLU_FREE(lookAhead_block_ids);
@@ -147,9 +147,9 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
 	***********************************************/
 	tt_start = SuperLU_timer_();
 
-	int u_block_number = nub - jj0;
 	
 #if defined(USE_SW) && defined(OPT_gather_avoid)
+	int u_block_number = nub - jj0;
 	zMatrix_t U_all;
 	zMatrix_t L_lookAhead_all;
 	zMatrix_t L_Remain_all;
@@ -416,12 +416,13 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
 #if ( PRNTlevel>=1 )
 		tt_end = SuperLU_timer_();
 		LookAheadGEMMTimer += tt_end - tt_start;
-#if ( PROFlevel>=1 )
-		gemm_stats[gemm_count].m = Lnbrow;
-		gemm_stats[gemm_count].n = ncols;
-		gemm_stats[gemm_count].k = ldu;
-		gemm_stats[gemm_count++].microseconds = (tt_end - tt_start) * 1e6;
-#endif
+// FIXME
+// #if ( PROFlevel>=1 )
+// 		gemm_stats[gemm_count].m = Lnbrow;
+// 		gemm_stats[gemm_count].n = ncols;
+// 		gemm_stats[gemm_count].k = ldu;
+// 		gemm_stats[gemm_count++].microseconds = (tt_end - tt_start) * 1e6;
+// #endif
 		tt_start = SuperLU_timer_();
 #endif
 
