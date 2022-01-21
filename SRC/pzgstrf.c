@@ -1657,9 +1657,13 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 // #include "sw/host/zlook_ahead_update_sw.c"
 // #endif
 
-// #if !defined(USE_SW)
+#ifdef USE_FUGAKU
+#include "fugaku/zlook_ahead_update_fugaku.c"
+#endif
+
+#if !defined(USE_SW) && !defined(USE_FUGAKU)
 #include "zlook_ahead_update.c"
-// #endif
+#endif
 
             lookaheadupdatetimer += SuperLU_timer_() - ttx;
 /************************************************************************/

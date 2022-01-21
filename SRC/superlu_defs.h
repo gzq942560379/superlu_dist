@@ -890,6 +890,10 @@ extern void C_BcTree_waitSendRequest(C_Tree* tree);
 #include "sw/superlu_defs_sw.h"
 #endif
 
+#ifdef USE_FUGAKU
+#include "fugaku/superlu_defs_fgk.h"
+#endif
+
 #ifdef __cplusplus
   }
 #endif
