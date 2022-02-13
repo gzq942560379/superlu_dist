@@ -1090,6 +1090,9 @@ extern int_t ancestorFactor(
 #ifdef USE_FUGAKU
 #include "fugaku/superlu_zdefs_fgk.h"
 #endif
+#ifdef USE_X86
+#include "x86_64/superlu_zdefs_x86.h"
+#endif
 #ifdef __cplusplus
   }
 #endif
