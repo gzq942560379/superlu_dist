@@ -338,6 +338,7 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
     double pdgstrf2_timer       = 0.0;
     double pdgstrs2_timer       = 0.0;
     double lookaheadupdatetimer = 0.0;
+    double lookaheadupdateflops = 0.0;
     double InitTimer            = 0.0; /* including compute schedule, malloc */
     double tt_start, tt_end;
 
@@ -1811,8 +1812,10 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
     /* Print detailed statistics */
     /* Updating total flops */
     double allflops;
-    MPI_Reduce(&RemainGEMM_flops, &allflops, 1, MPI_DOUBLE, MPI_SUM,
-	       0, grid->comm);
+    MPI_Reduce(&RemainGEMM_flops, &allflops, 1, MPI_DOUBLE, MPI_SUM, 0, grid->comm);
+    double local_flops = RemainGEMM_flops + LookAheadGEMMFlOp + lookaheadupdateflops;
+    double glabal_flops;
+    MPI_Reduce(&local_flops, &glabal_flops, 1, MPI_DOUBLE, MPI_SUM, 0, grid->comm);
     if ( iam==0 ) {
 	printf("\nInitialization time\t%8.2lf seconds\n"
 	       "\t Serial: compute static schedule, allocate storage\n", InitTimer);
@@ -1838,7 +1841,9 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 
         printf("Total factorization time            \t: %8.2lf seconds, \n", pxgstrfTimer);
         printf("--------\n");
-	printf("GEMM maximum block: %d-%d-%d\n", gemm_max_m, gemm_max_k, gemm_max_n);
+        printf("FLOPs : %8.2le\n", glabal_flops);
+        printf("TFLOPS : %lf\n", glabal_flops*1e-12/pxgstrfTimer);
+        printf("GEMM maximum block: %d-%d-%d\n", gemm_max_m, gemm_max_k, gemm_max_n);
     }
 #endif
 

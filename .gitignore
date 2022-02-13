@@ -15,5 +15,6 @@
 /INSTALL
 /include
 /lib64
+/.vscode
 superlu_dist_config.h
 *.o
