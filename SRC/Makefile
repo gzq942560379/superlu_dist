@@ -129,6 +129,20 @@ ifeq ($(HAVE_FUGAKU), TRUE)
 	PZGSTRF_SRC += fugaku/zSchCompUdt-2Ddynamic-fgk.c fugaku/zlook_ahead_update_fugaku.c
 
 endif
+ifeq ($(HAVE_X86), TRUE)
+	HOST_DPLUDIR = x86_64/double
+	HOST_ZPLUDIR = x86_64/doublecomplex
+
+	HOST_DPLUSRC = $(shell find $(HOST_DPLUDIR) -name "*.c")
+	HOST_ZPLUSRC = $(shell find $(HOST_ZPLUDIR) -name "*.c")
+
+	HOST_DPLUOBJ = $(patsubst %.c, %.o, $(HOST_DPLUSRC))
+	HOST_ZPLUOBJ = $(patsubst %.c, %.o, $(HOST_ZPLUSRC))
+
+	HOST_OBJ = ${HOST_DPLUOBJ} ${HOST_ZPLUOBJ}
+	PZGSTRF_SRC += x86_64/zSchCompUdt-2Ddynamic-x86.c x86_64/zlook_ahead_update_x86.c
+
+endif
 
 all:  double complex16
 

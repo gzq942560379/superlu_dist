@@ -31,19 +31,23 @@ rukp = rukp0; /* point to the start of nzval[] */
 j = jj0 = 0;  /* After the j-loop, jj0 points to the first block in U
                  outside look-ahead window. */
 
-#if 0
-for (jj = 0; jj < nub; ++jj) assert(perm_u[jj] == jj); /* Sherry */
+#ifndef USE_VENDOR_BLAS
+assert(false);
 #endif
 
-#ifdef ISORT
-while (j < nub && iperm_u[j] <= k0 + num_look_aheads)
-#else
-while (j < nub && perm_u[2 * j] <= k0 + num_look_aheads)
+#ifndef ISORT
+assert(false);
 #endif
+
+while (j < nub && iperm_u[j] <= k0 + num_look_aheads)
 {
+#if defined(USE_X86) && defined(OPT_gather_avoid)
+    zMatrix_t U;
+    zMatrix_t L_all;
+    zMatrix_t *L_list = SUPERLU_MALLOC(nlb * sizeof(zMatrix_t));
+#endif
     doublecomplex zero = {0.0, 0.0};
 
-#if 1
     /* Search is needed because a permutation perm_u is involved for j  */
     /* Search along the row for the pointers {iukp, rukp} pointing to
      * block U(k,j).
@@ -54,14 +58,8 @@ while (j < nub && perm_u[2 * j] <= k0 + num_look_aheads)
      */
     arrive_at_ublock(
 		     j, &iukp, &rukp, &jb, &ljb, &nsupc,
-         	     iukp0, rukp0, usub, perm_u, xsup, grid
+         	    iukp0, rukp0, usub, perm_u, xsup, grid
 		    );
-#else
-    jb = usub[iukp];
-    ljb = LBj (jb, grid);     /* Local block number of U(k,j). */
-    nsupc = SuperSize(jb);
-    iukp += UB_DESCRIPTOR; /* Start fstnz of block U(k,j). */
-#endif
 
     j++;
     jj0++;
@@ -90,6 +88,9 @@ while (j < nub && perm_u[2 * j] <= k0 + num_look_aheads)
     ++num_copy;
 #endif
 
+#if defined(USE_X86) && defined(OPT_gather_avoid)
+    zMatrix_init(&U,ldu,ncols,ldu,&uval[rukp]);
+#else
     /* Now copy one block U(k,j) to bigU for GEMM, padding zeros up to ldu. */
     tempu = bigU; /* Copy one block U(k,j) to bigU for GEMM */
     for (jj = iukp; jj < iukp + nsupc; ++jj) {
@@ -105,102 +106,116 @@ while (j < nub && perm_u[2 * j] <= k0 + num_look_aheads)
             tempu += segsize;
         }
     }
+#endif
     tempu = bigU; /* set back to the beginning of the buffer */
 
     nbrow = lsub[1]; /* number of row subscripts in L(:,k) */
     if (myrow == krow) nbrow = lsub[1] - lsub[3]; /* skip diagonal block for those rows. */
     // double ttx =SuperLU_timer_();
 
-    int current_b = 0; /* Each thread starts searching from first block.
-                          This records the moving search target.           */
     lptr = lptr0; /* point to the start of index[] in supernode L(:,k) */
     luptr = luptr0;
 
-#ifdef _OPENMP
-    /* Sherry -- examine all the shared variables ??
-       'firstprivate' ensures that the private variables are initialized
-       to the values before entering the loop.  */
-#pragma omp parallel for \
-    firstprivate(lptr,luptr,ib,current_b) private(lb) \
-    default(shared) schedule(dynamic)
-#endif
+    int all_row = 0;
+    LBlock_info_t* LBlock_info = SUPERLU_MALLOC(nlb * sizeof(LBlock_info_t));
+
+
     for (lb = 0; lb < nlb; lb++) { /* Loop through each block in L(:,k) */
-        int temp_nbrow; /* automatic variable is private */
 
-        /* Search for the L block that my thread will work on.
-           No need to search from 0, can continue at the point where
-           it is left from last iteration.
-           Note: Blocks may not be sorted in L. Different thread picks up
-	   different lb.   */
-        for (; current_b < lb; ++current_b) {
-            temp_nbrow = lsub[lptr + 1];    /* Number of full rows. */
-            lptr += LB_DESCRIPTOR;  /* Skip descriptor. */
-            lptr += temp_nbrow;   /* move to next block */
-            luptr += temp_nbrow;  /* move to next block */
-        }
-
-#ifdef _OPENMP
-        int_t thread_id = omp_get_thread_num ();
-#else
-        int_t thread_id = 0;
-#endif
-        doublecomplex * tempv = bigV + ldt*ldt*thread_id;
-
-        int *indirect_thread  = indirect + ldt * thread_id;
-        int *indirect2_thread = indirect2 + ldt * thread_id;
         ib = lsub[lptr];        /* block number of L(i,k) */
-        temp_nbrow = lsub[lptr + 1];    /* Number of full rows. */
-	/* assert (temp_nbrow <= nbrow); */
+        int temp_nbrow = lsub[lptr + 1];    /* Number of full rows. */
 
+#if defined(USE_X86) && defined(OPT_gather_avoid)
+        zMatrix_init(&L_list[lb], temp_nbrow, ldu, nsupr, &lusup[luptr + (knsupc - ldu) * nsupr]);
+#endif
+
+        LBlock_info[lb].ib = ib;
+        LBlock_info[lb].lptr = lptr;
+        LBlock_info[lb].FullRow = ((lb == 0) ?  temp_nbrow : (LBlock_info[lb-1].FullRow + temp_nbrow));
+        
+	    all_row += temp_nbrow;
         lptr += LB_DESCRIPTOR;  /* Skip descriptor. */
-
-	/*if (thread_id == 0) tt_start = SuperLU_timer_();*/
-
-        /* calling gemm */
-	    stat->ops[FACT] += 8.0 * (flops_t)temp_nbrow * ldu * ncols;
-        lookaheadupdateflops += 8.0 * (flops_t)temp_nbrow * ldu * ncols;
-#if defined (USE_VENDOR_BLAS)
-        zgemm_("N", "N", &temp_nbrow, &ncols, &ldu, &alpha,
-                   &lusup[luptr + (knsupc - ldu) * nsupr], &nsupr,
-                   tempu, &ldu, &beta, tempv, &temp_nbrow, 1, 1);
-#else
-        zgemm_("N", "N", &temp_nbrow, &ncols, &ldu, &alpha,
-                   &lusup[luptr + (knsupc - ldu) * nsupr], &nsupr,
-                   tempu, &ldu, &beta, tempv, &temp_nbrow );
-#endif
-
-#if 0
-	if (thread_id == 0) {
-	    tt_end = SuperLU_timer_();
-	    LookAheadGEMMTimer += tt_end - tt_start;
-	    tt_start = tt_end;
-	}
-#endif
-        /* Now scattering the output. */
-        if (ib < jb) {    /* A(i,j) is in U. */
-            zscatter_u (ib, jb,
-                       nsupc, iukp, xsup,
-                       klst, temp_nbrow,
-                       lptr, temp_nbrow, lsub,
-                       usub, tempv, Ufstnz_br_ptr, Unzval_br_ptr, grid);
-        } else {          /* A(i,j) is in L. */
-            zscatter_l (ib, ljb, nsupc, iukp, xsup, klst, temp_nbrow, lptr,
-                       temp_nbrow, usub, lsub, tempv,
-                       indirect_thread, indirect2_thread,
-                       Lrowind_bc_ptr, Lnzval_bc_ptr, grid);
-        }
-
-        ++current_b;         /* Move to next block. */
         lptr += temp_nbrow;
         luptr += temp_nbrow;
 
-#if 0
-	if (thread_id == 0) {
-	    tt_end = SuperLU_timer_();
-	    LookAheadScatterTimer += tt_end - tt_start;
-	}
-#endif
     } /* end parallel for lb = 0, nlb ... all blocks in L(:,k) */
+#if defined(USE_X86) && defined(OPT_gather_avoid)
+    zMatrix_init(&L_all, all_row, ldu, nsupr, &lusup[luptr0 + (knsupc - ldu) * nsupr]);
+#endif
+
+    if(all_row > 0 && ldu > 0 && ncols > 0){
+        /* calling gemm */
+        stat->ops[FACT] += 8.0 * (flops_t)all_row * ldu * ncols;
+        lookaheadupdateflops += 8.0 * (flops_t)all_row * ldu * ncols;
+#if defined(USE_X86) && defined(OPT_gather_avoid)
+        zMatrix_t* L = &L_list[lb];
+        assert(L_all.col == U.row);
+        zgemm_("N", "N", &L_all.row, &U.col, &L_all.col, &alpha,
+            L_all.val, &L_all.ld,
+            U.val, &U.ld, &beta, bigV, &all_row, 1, 1);        
+#else
+        zgemm_("N", "N", &all_row, &ncols, &ldu, &alpha,
+            &lusup[luptr0 + (knsupc - ldu) * nsupr], &nsupr,
+            tempu, &ldu, &beta, bigV, &all_row, 1, 1);
+#endif
+
+#if defined(USE_X86) && defined(parallel_scatter) && defined(_OPENMP)
+#pragma omp parallel default(shared)
+#endif
+        {
+
+#if defined(USE_X86) && defined(parallel_scatter) && defined(_OPENMP)
+            int thread_id = omp_get_thread_num();
+            int* indirect_thread = indirect + (ldt + CACHELINE/sizeof(int)) * thread_id;
+            int* indirect2_thread = indirect2 + (ldt + CACHELINE/sizeof(int)) * thread_id;
+#pragma omp for private (lb,lptr,ib) schedule(dynamic)
+#else /* not use _OPENMP */
+            int thread_id = 0;
+            int* indirect_thread = indirect;
+            int* indirect2_thread = indirect2;
+#endif   
+            for (lb = 0; lb < nlb; lb++) { /* Loop through each block in L(:,k) */
+                ib = LBlock_info[lb].ib;
+                // ib = LBlock_info[lb].ib;        /* block number of L(i,k) */
+                lptr = LBlock_info[lb].lptr;
+                int temp_nbrow = lsub[lptr + 1];    /* Number of full rows. */
+                lptr += LB_DESCRIPTOR;  /* Skip descriptor. */
+                int cum_nrow = (lb==0 ? 0 : LBlock_info[lb-1].FullRow);
+                
+                doublecomplex * tempv = bigV + cum_nrow;
+
+                /* Now scattering the output. */
+                if (ib < jb) {    /* A(i,j) is in U. */
+#if defined(USE_X86) && defined(OPT_scatter_index_compress)
+                    zscatter_u_x86 (ib, jb,
+                            nsupc, iukp, xsup,
+                            klst, all_row,
+                            lptr, temp_nbrow, lsub,
+                            usub, tempv, Ufstnz_br_ptr, Unzval_br_ptr, grid);
+#else
+                    zscatter_u (ib, jb,
+                            nsupc, iukp, xsup,
+                            klst, all_row,
+                            lptr, temp_nbrow, lsub,
+                            usub, tempv, Ufstnz_br_ptr, Unzval_br_ptr, grid);
+#endif
+                } else {          /* A(i,j) is in L. */
+#if defined(USE_X86) && defined(OPT_scatter_index_compress)
+                    zscatter_l_x86 (ib, ljb, nsupc, iukp, xsup, klst, all_row, lptr,
+                            temp_nbrow, usub, lsub, tempv,
+                            indirect_thread, indirect2_thread,
+                            Lrowind_bc_ptr, Lnzval_bc_ptr, grid);
+#else
+                    zscatter_l (ib, ljb, nsupc, iukp, xsup, klst, all_row, lptr,
+                            temp_nbrow, usub, lsub, tempv,
+                            indirect_thread, indirect2_thread,
+                            Lrowind_bc_ptr, Lnzval_bc_ptr, grid);
+#endif
+                }
+            } /* end parallel for lb = 0, nlb ... all blocks in L(:,k) */
+        }
+    }
+    SUPERLU_FREE(LBlock_info);
 
     iukp += nsupc; /* Mov to block U(k,j+1) */
 
@@ -209,11 +224,7 @@ while (j < nub && perm_u[2 * j] <= k0 + num_look_aheads)
      * =========================================== */
     kk = jb; /* destination column that is just updated */
     kcol = PCOL (kk, grid);
-#ifdef ISORT
     kk0 = iperm_u[j - 1];
-#else
-    kk0 = perm_u[2 * (j - 1)];
-#endif
     look_id = kk0 % (1 + num_look_aheads);
 
     if (look_ahead[kk] == k0 && kcol == mycol) {
@@ -251,6 +262,7 @@ while (j < nub && perm_u[2 * j] <= k0 + num_look_aheads)
         scp = &grid->rscp;      /* The scope of process row. */
         for (pj = 0; pj < Pc; ++pj) {
             if (ToSendR[lk][pj] != EMPTY) {
+
 #if ( PROFlevel>=1 )
                 TIC (t1);
 #endif
@@ -266,13 +278,18 @@ while (j < nub && perm_u[2 * j] <= k0 + num_look_aheads)
                 msg_cnt += 2;
                 msg_vol += msgcnt[0] * iword + msgcnt[1] * dword;
 #endif
+
 #if ( DEBUGlevel>=2 )
                 printf ("[%d] -2- Send L(:,%4d): #lsub %4d, #lusup %4d to Pj %2d, tags %d:%d \n",
                         iam, kk, msgcnt[0], msgcnt[1], pj,
-			SLU_MPI_TAG(0,kk0), SLU_MPI_TAG(1,kk0));
+			    SLU_MPI_TAG(0,kk0), SLU_MPI_TAG(1,kk0));
 #endif
             }  /* end if ( ToSendR[lk][pj] != EMPTY ) */
         } /* end for pj ... */
     } /* end if( look_ahead[kk] == k0 && kcol == mycol ) */
-} /* end while j < nub and perm_u[j] <k0+NUM_LOOK_AHEAD */
 
+#if defined(USE_X86) && defined(OPT_gather_avoid)
+    SUPERLU_FREE(L_list);
+#endif
+
+} /* end while j < nub and perm_u[j] <k0+NUM_LOOK_AHEAD */
