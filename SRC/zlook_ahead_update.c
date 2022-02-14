@@ -157,7 +157,8 @@ while (j < nub && perm_u[2 * j] <= k0 + num_look_aheads)
 	/*if (thread_id == 0) tt_start = SuperLU_timer_();*/
 
         /* calling gemm */
-	stat->ops[FACT] += 8.0 * (flops_t)temp_nbrow * ldu * ncols;
+	    stat->ops[FACT] += 8.0 * (flops_t)temp_nbrow * ldu * ncols;
+        lookaheadupdateflops += 8.0 * (flops_t)temp_nbrow * ldu * ncols;
 #if defined (USE_VENDOR_BLAS)
         zgemm_("N", "N", &temp_nbrow, &ncols, &ldu, &alpha,
                    &lusup[luptr + (knsupc - ldu) * nsupr], &nsupr,
