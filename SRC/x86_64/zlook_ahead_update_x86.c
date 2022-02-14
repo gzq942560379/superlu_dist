@@ -146,6 +146,7 @@ while (j < nub && iperm_u[j] <= k0 + num_look_aheads)
     if(all_row > 0 && ldu > 0 && ncols > 0){
         /* calling gemm */
         stat->ops[FACT] += 8.0 * (flops_t)all_row * ldu * ncols;
+        lookaheadupdateflops += 8.0 * (flops_t)all_row * ldu * ncols;
 #if defined(USE_X86) && defined(OPT_gather_avoid)
         zMatrix_t* L = &L_list[lb];
         assert(L_all.col == U.row);
