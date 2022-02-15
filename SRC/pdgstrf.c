@@ -437,7 +437,7 @@ pdgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 #endif
 #if (PROFlevel >= 1 )
     gemm_stats = (gemm_profile *) SUPERLU_MALLOC(nsupers * sizeof(gemm_profile));
-    if (iam == 0) fgemm = fopen("dgemm_mnk.dat", "w");
+    // if (iam == 0) fgemm = fopen("dgemm_mnk.dat", "w");
     int *prof_sendR = intCalloc_dist(nsupers);
 #endif
 
@@ -813,10 +813,12 @@ pdgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
     bigV = NULL;
 
 #if ( PRNTlevel>=1 )
-    if(!iam) printf("\t.. GEMM buffer size: max_row_size X max_ncols = %d x " IFMT "\n",
-	     		  max_row_size, max_ncols);
-    printf("[%d].. BIG U size " IFMT " (on CPU)\n", iam, bigu_size);
-    fflush(stdout);
+    if(iam == 0){
+        printf("\t.. GEMM buffer size: max_row_size X max_ncols = %d x " IFMT "\n",
+                    max_row_size, max_ncols);
+        printf("[%d].. BIG U size " IFMT " (on CPU)\n", iam, bigu_size);
+        fflush(stdout);
+    }
 #endif
 
 #ifdef GPU_ACC /*-- use GPU --*/
@@ -829,8 +831,10 @@ pdgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 #endif
 
 #if ( PRNTlevel>=1 )
-    printf("[%d].. BIG V size %d (on CPU), dC buffer_size %d (on GPU)\n", iam, bigv_size, buffer_size);
-    fflush(stdout);
+    if(iam == 0){
+        printf("[%d].. BIG V size %d (on CPU), dC buffer_size %d (on GPU)\n", iam, bigv_size, buffer_size);
+        fflush(stdout);
+    }
 #endif
     if ( checkGPU(gpuHostMalloc((void**)&bigV, bigv_size * sizeof(double) ,gpuHostMallocDefault)) )
         ABORT("Malloc fails for dgemm buffer V");
@@ -892,8 +896,10 @@ pdgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
     bigv_size += (gemm_m_pad * (j + max_row_size + gemm_n_pad));
 
 #if ( PRNTlevel>=1 )
-    printf("[%d].. BIG V size %d (on CPU)\n", iam, bigv_size);
-    fflush(stdout);
+    if(iam == 0){
+        printf("[%d].. BIG V size %d (on CPU)\n", iam, bigv_size);
+        fflush(stdout);
+    }
 #endif
 
 //#ifdef __INTEL_COMPILER
@@ -1954,11 +1960,11 @@ pdgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 	    //#include <float.h>
 	    //int Digs = DECIMAL_DIG;
 	    printf("gemm_count %d\n", gemm_count);
-	    for (i = 0; i < gemm_count; ++i)
-		fprintf(fgemm, "%8d%8d%8d\t %20.16e\t%8d\n", gemm_stats[i].m, gemm_stats[i].n,
-			gemm_stats[i].k, gemm_stats[i].microseconds, prof_sendR[i]);
+	    // for (i = 0; i < gemm_count; ++i)
+		// fprintf(fgemm, "%8d%8d%8d\t %20.16e\t%8d\n", gemm_stats[i].m, gemm_stats[i].n,
+		// 	gemm_stats[i].k, gemm_stats[i].microseconds, prof_sendR[i]);
 
-	    fclose(fgemm);
+	    // fclose(fgemm);
         }
 	SUPERLU_FREE(gemm_stats);
 	SUPERLU_FREE(prof_sendR);
