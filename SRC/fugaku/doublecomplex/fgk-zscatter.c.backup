@@ -25,6 +25,8 @@ at the top-level directory.
 #include "superlu_zdefs.h"
 #include "fugaku/utils.h"
 
+#define MAX_SUPERNODE_SIZE 128
+
 void
 zscatter_l_fugaku (
             int ib,         /* row block number of source block L(i,k) */
@@ -91,25 +93,27 @@ zscatter_l_fugaku (
     //         segment_prev = segment_cur;
     //     }
     // }
-    // int_t* segment_ptr = SUPERLU_MALLOC((max_supernode_size+1) * sizeof(int_t));
-    // int_t* segment_offset = SUPERLU_MALLOC(max_supernode_size * sizeof(int_t));
+    // int_t* segment_ptr = SUPERLU_MALLOC((segment_count+1) * sizeof(int_t));
+    // int_t* segment_offset = SUPERLU_MALLOC(segment_count * sizeof(int_t));
     // segment_ptr[0] = 0;
     // segment_offset[0] = indirect2[0];
-    // int segment_prev = indirect2[0]; 
-    // int segment_count = 1;
+    // segment_prev = indirect2[0]; 
+    // int segment_index = 1;
     // for(int i = 1; i < temp_nbrow; i++){
     //     int segment_cur = indirect2[i] - i;
     //     if(segment_prev != segment_cur){
-    //         segment_ptr[segment_count] = i;
-    //         segment_offset[segment_count] = segment_cur;
-    //         segment_count += 1;
+    //         segment_ptr[segment_index] = i;
+    //         segment_offset[segment_index] = segment_cur;
+    //         segment_index += 1;
     //         segment_prev = segment_cur;
     //     }
     // }
-    // segment_ptr[segment_count] = temp_nbrow;
+    // segment_ptr[segment_index] = temp_nbrow;
+    // assert(segment_index == segment_count);
 
     indirect_index_segment_compress_t segment_compress;
     indirect_index_segment_compress_init(&segment_compress, indirect2, temp_nbrow);
+
 
     // assert(segment_index == segment_count);
 
@@ -180,6 +184,7 @@ zscatter_l_fugaku (
 } /* zscatter_l */
 
 
+
 void
 zscatter_u_fugaku ( 
             int ib,
@@ -197,7 +202,6 @@ zscatter_u_fugaku (
             int_t ** Ufstnz_br_ptr, doublecomplex **Unzval_br_ptr,
             gridinfo_t * grid)
 {
-    int max_supernode_size = sp_ienv_dist(3);
     int_t ilst = FstBlockC (ib + 1);
     int_t lib = LBi (ib, grid);
     int_t *index = Ufstnz_br_ptr[lib];
@@ -225,7 +229,7 @@ zscatter_u_fugaku (
     //     printf("i lsub[lptr + i] lsub[lptr + i]-i : %d %d %d\n",i,lsub[lptr + i],lsub[lptr + i]-i);
     // }
 
-    // offset compress to segment
+    // // offset compress to segment
     // int segment_count = 1;
     // int segment_prev = lsub[lptr];
     // for(int i = 1; i < temp_nbrow; i++){
@@ -235,27 +239,28 @@ zscatter_u_fugaku (
     //         segment_prev = segment_cur;
     //     }
     // }
-    // int_t* segment_ptr = SUPERLU_MALLOC((max_supernode_size+1) * sizeof(int_t));
-    // int_t* segment_offset = SUPERLU_MALLOC(max_supernode_size * sizeof(int_t));
+    // int_t* segment_ptr = SUPERLU_MALLOC((segment_count+1) * sizeof(int_t));
+    // int_t* segment_offset = SUPERLU_MALLOC(segment_count * sizeof(int_t));
     // segment_ptr[0] = 0;
     // segment_offset[0] = lsub[lptr];
-    // int segment_prev = lsub[lptr];
-    // int segment_count = 1;
+    // segment_prev = lsub[lptr];
+    // int segment_index = 1;
     // for(int i = 1; i < temp_nbrow; i++){
     //     int segment_cur = lsub[lptr + i] - i;
     //     if(segment_prev != segment_cur){
-    //         segment_ptr[segment_count] = i;
-    //         segment_offset[segment_count] = segment_cur;
-    //         segment_count += 1;
+    //         segment_ptr[segment_index] = i;
+    //         segment_offset[segment_index] = segment_cur;
+    //         segment_index += 1;
     //         segment_prev = segment_cur;
     //     }
     // }
-    // segment_ptr[segment_count] = temp_nbrow;
-    // assert(segment_count == segment_count);
+    // segment_ptr[segment_index] = temp_nbrow;
+    // assert(segment_index == segment_count);
 
     indirect_index_segment_compress_t segment_compress;
     indirect_index_segment_compress_init(&segment_compress, &lsub[lptr], temp_nbrow);
     
+
     // if(segment_count > 3)
     // printf("segment_count temp_nbrow : %d %d\n",segment_count,temp_nbrow);
     // assert(segment_count < 4), "Assert segment_count < 4 in ", __FILE__, ":", __LINE__;
@@ -299,8 +304,8 @@ zscatter_u_fugaku (
     // }  /* for jj = 0:nsupc */
 
     int non_zero_col_num = 0;
-    doublecomplex * non_zero_ucols[max_supernode_size];
-    int fnzs[max_supernode_size];
+    doublecomplex * non_zero_ucols[MAX_SUPERNODE_SIZE];
+    int fnzs[MAX_SUPERNODE_SIZE];
     for (int jj = 0; jj < nsupc; ++jj) {
         int_t segsize = klst - usub[iukp + jj];
         int fnz = index[iuip_lib+jj];
@@ -315,22 +320,19 @@ zscatter_u_fugaku (
     for (int jj_ptr = 0; jj_ptr < non_zero_col_num; ++jj_ptr) {
         int fnz = fnzs[jj_ptr];
         doublecomplex *ucol_cur = non_zero_ucols[jj_ptr];
-        double *tempv_cur = (double*)(tempv + nbrow * jj_ptr);
+        doublecomplex *tempv_cur = tempv + nbrow * jj_ptr;
         for(int ptr = 0; ptr < segment_compress.segment_count; ++ptr){
             int i_start = segment_compress.segment_ptr[ptr];
             int i_end = segment_compress.segment_ptr[ptr+1];
             int offset = segment_compress.segment_offset[ptr];
             int rel = offset - fnz;
-            double *UCOL = (double*)&ucol_cur[rel];
-            // for(int i = i_start; i < i_end; i++){
-            //     z_sub(&UCOL[i], &UCOL[i], &tempv_cur[i]);
-            // }
-            #pragma omp simd
-            for(int i = i_start*2; i < i_end*2; i++){
-                UCOL[i] -= tempv_cur[i];
+            doublecomplex *UCOL = &ucol_cur[rel];
+            for(int i = i_start; i < i_end; i++){
+                z_sub(&UCOL[i], &UCOL[i], &tempv_cur[i]);
             }
         }
     }
+
 
     indirect_index_segment_compress_destroy(&segment_compress);
 } /* zscatter_u */

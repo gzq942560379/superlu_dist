@@ -562,8 +562,7 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
 	   		} /* end omp for ij = ... */
 	 	} /* end omp parallel */
 #if ( PRNTlevel>=1 )
-		if (thread_id == 0)
-			LookAheadScatterTimer += SuperLU_timer_() - tt_start;
+		LookAheadScatterTimer += SuperLU_timer_() - tt_start;
 #endif
 	} /* end if Lnbrow>0 ... look-ahead GEMM and scatter */
 
@@ -589,6 +588,7 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
 #endif
 		/* calling aggregated large GEMM, result stored in bigV[]. */
 		//zgemm_("N", "N", &Rnbrow, &ncols, &ldu, &alpha,
+		
 #if defined(USE_FUGAKU) && defined(OPT_gather_avoid) 
 		assert(L_Remain_all.col == U_all.row);
 		zgemm_("N", "N", &L_Remain_all.row, &U_all.col, &L_Remain_all.col, &alpha,
