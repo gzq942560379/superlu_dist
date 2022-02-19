@@ -1667,11 +1667,12 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 #ifdef USE_FUGAKU
 #include "fugaku/zlook_ahead_update_fugaku.c"
 #endif
+
 #ifdef USE_X86
 #include "x86_64/zlook_ahead_update_x86.c"
 #endif
 
-#if !defined(USE_SW) && !defined(USE_FUGAKU)
+#if !defined(USE_SW) && !defined(USE_FUGAKU) && !defined(USE_X86)
 #include "zlook_ahead_update.c"
 #endif
 
@@ -1791,7 +1792,7 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 /*#include "SchCompUdt--Phi-2Ddynamic-alt.c"*/
 //#include "zSchCompUdt-2Ddynamic_v6.c"
 
-#if !defined(GPU_ACC) && !defined(USE_SW) && !defined(USE_FUGAKU)
+#if !defined(GPU_ACC) && !defined(USE_SW) && !defined(USE_FUGAKU) && !defined(USE_X86)
 #include "zSchCompUdt-2Ddynamic.c"
 #endif
 	/*uncomment following to compare against SuperLU 3.3 baseline*/
