@@ -227,6 +227,7 @@ pdgstrf2_trsm
                     if (lusup[i] < 0)  lusup[i] = -thresh;
                     else  lusup[i] = thresh;
 #if ( PRNTlevel>=2 )
+			        if(iam==0)
                     printf ("replaced by %e\n", lusup[i]);
 #endif
                     ++(stat->TinyPivots);

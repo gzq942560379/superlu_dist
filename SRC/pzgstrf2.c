@@ -226,6 +226,7 @@ pzgstrf2_trsm
                     else lusup[i].r = thresh;
                     lusup[i].i = 0.0;
 #if ( PRNTlevel>=2 )
+			        if(iam==0)
                     printf ("replaced by %e\n", lusup[i]);
 #endif
                     ++(stat->TinyPivots);

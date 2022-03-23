@@ -227,6 +227,7 @@ psgstrf2_trsm
                     if (lusup[i] < 0)  lusup[i] = -thresh;
                     else  lusup[i] = thresh;
 #if ( PRNTlevel>=2 )
+			        if(iam==0)
                     printf ("replaced by %e\n", lusup[i]);
 #endif
                     ++(stat->TinyPivots);
@@ -467,6 +468,7 @@ void Local_Sgstrf2(superlu_dist_options_t *options, int_t k, double thresh,
                 if (lusup[i] < 0) lusup[i] = -thresh;
                 else lusup[i] = thresh;
 #if ( PRNTlevel>=2 )
+			        if(iam==0)
                     printf ("replaced by %e\n", lusup[i]);
 #endif
                 ++(stat->TinyPivots);
