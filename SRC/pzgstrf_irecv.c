@@ -1079,6 +1079,7 @@ static void pzgstrf2
 	    if ( options->ReplaceTinyPivot == YES ) {
 		if ( z_abs1(&lusup[i]) < thresh ) { /* Diagonal */
 #if ( PRNTlevel>=2 )
+			if(iam==0)
 		    printf("(%d) .. col %d, tiny pivot %e  ",
 			   iam, jfst+j, lusup[i]);
 #endif

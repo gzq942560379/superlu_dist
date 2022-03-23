@@ -219,6 +219,7 @@ pdgstrf2_trsm
                 if (fabs (lusup[i]) < thresh) {  /* Diagonal */
 
 #if ( PRNTlevel>=2 )
+			        if(iam==0)
                     printf ("(%d) .. col %d, tiny pivot %e  ",
                             iam, jfst + j, lusup[i]);
 #endif
@@ -457,16 +458,16 @@ void Local_Dgstrf2(superlu_dist_options_t *options, int_t k, double thresh,
         {
             if (fabs (lusup[i]) < thresh) {  /* Diagonal */
 
-#if ( PRNTlevel>=2 )
-                    printf ("(%d) .. col %d, tiny pivot %e  ",
-                            iam, jfst + j, lusup[i]);
-#endif
+// #if ( PRNTlevel>=2 )
+//                     printf ("(%d) .. col %d, tiny pivot %e  ",
+//                             iam, jfst + j, lusup[i]);
+// #endif
                 /* Keep the new diagonal entry with the same sign. */
                 if (lusup[i] < 0) lusup[i] = -thresh;
                 else lusup[i] = thresh;
-#if ( PRNTlevel>=2 )
-                    printf ("replaced by %e\n", lusup[i]);
-#endif
+// #if ( PRNTlevel>=2 )
+//                     printf ("replaced by %e\n", lusup[i]);
+// #endif
                 ++(stat->TinyPivots);
             }
         }

@@ -217,6 +217,7 @@ pzgstrf2_trsm
                 if ( slud_z_abs1(&lusup[i]) < thresh ) { /* Diagonal */
 
 #if ( PRNTlevel>=2 )
+			        if(iam==0)
                     printf ("(%d) .. col %d, tiny pivot %e  ",
                             iam, jfst + j, lusup[i]);
 #endif
@@ -455,17 +456,17 @@ void Local_Zgstrf2(superlu_dist_options_t *options, int_t k, double thresh,
                 if ( slud_z_abs1(&lusup[i]) < thresh &&
 		     lusup[i].r != 0.0 && lusup[i].i != 0.0 ) { /* Diagonal */
 
-#if ( PRNTlevel>=2 )
-                    printf ("(%d) .. col %d, tiny pivot %e  ",
-                            iam, jfst + j, lusup[i]);
-#endif
+// #if ( PRNTlevel>=2 )
+//                     printf ("(%d) .. col %d, tiny pivot %e  ",
+//                             iam, jfst + j, lusup[i]);
+// #endif
                 /* Keep the new diagonal entry with the same sign. */
                 if ( lusup[i].r < 0 ) lusup[i].r = -thresh;
                 else lusup[i].r = thresh;
                 lusup[i].i = 0.0;
-#if ( PRNTlevel>=2 )
-                    printf ("replaced by %e\n", lusup[i]);
-#endif
+// #if ( PRNTlevel>=2 )
+//                     printf ("replaced by %e\n", lusup[i]);
+// #endif
                 ++(stat->TinyPivots);
             }
         }

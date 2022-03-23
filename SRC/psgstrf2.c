@@ -219,6 +219,7 @@ psgstrf2_trsm
                 if (fabs (lusup[i]) < thresh) {  /* Diagonal */
 
 #if ( PRNTlevel>=2 )
+			        if(iam==0)
                     printf ("(%d) .. col %d, tiny pivot %e  ",
                             iam, jfst + j, lusup[i]);
 #endif
@@ -458,6 +459,7 @@ void Local_Sgstrf2(superlu_dist_options_t *options, int_t k, double thresh,
             if (fabs (lusup[i]) < thresh) {  /* Diagonal */
 
 #if ( PRNTlevel>=2 )
+			        if(iam==0)
                     printf ("(%d) .. col %d, tiny pivot %e  ",
                             iam, jfst + j, lusup[i]);
 #endif

@@ -1132,6 +1132,7 @@ static void pdgstrf2
 	    if ( options->ReplaceTinyPivot == YES || lusup[i] == 0.0 ) {
 		if ( fabs(lusup[i]) < thresh ) { /* Diagonal */
 #if ( PRNTlevel>=2 )
+			if(iam==0)
 		    printf("(%d) .. col %d, tiny pivot %e  ",
 			   iam, jfst+j, lusup[i]);
 #endif
