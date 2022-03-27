@@ -106,8 +106,7 @@ at the top-level directory.
  *
  * </pre>
  */
-#include <assert.h>  /* assertion doesn't work if NDEBUG is defined */
-#include <stdbool.h> 
+
 #include <math.h>
 #include "superlu_zdefs.h"
 
@@ -170,7 +169,6 @@ superlu_sort_perm (const void *arg1, const void *arg2)
 /************************************************************************/
 
 #include "zscatter.c"
-#include "zscatter-fugaku.c"
 
 /************************************************************************/
 
@@ -334,7 +332,6 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
     double pdgstrf2_timer       = 0.0;
     double pdgstrs2_timer       = 0.0;
     double lookaheadupdatetimer = 0.0;
-    double lookaheadupdateflops = 0.0;
     double InitTimer            = 0.0; /* including compute schedule, malloc */
     double tt_start, tt_end;
 
@@ -437,7 +434,7 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 #endif
 #if (PROFlevel >= 1 )
     gemm_stats = (gemm_profile *) SUPERLU_MALLOC(nsupers * sizeof(gemm_profile));
-    // if (iam == 0) fgemm = fopen("dgemm_mnk.dat", "w");
+    if (iam == 0) fgemm = fopen("dgemm_mnk.dat", "w");
     int *prof_sendR = intCalloc_dist(nsupers);
 #endif
 
@@ -817,11 +814,11 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 #if ( PRNTlevel>=1 )
     if(!iam) {
         printf("\t.. MAX_BUFFER_SIZE %d set for GPU\n", sp_ienv_dist(8));
-	    printf("\t.. N_GEMM: %d flops of GEMM done on CPU (1st block always on CPU)\n", sp_ienv_dist(7));
+	printf("\t.. N_GEMM: %d flops of GEMM done on CPU (1st block always on CPU)\n", sp_ienv_dist(7));
         printf("\t.. GEMM buffer size: max_row_size X max_ncols = %d x " IFMT "\n",
-                    max_row_size, max_ncols);
-        printf("[%d].. BIG U size " IFMT " (on CPU)\n", iam, bigu_size);
-        fflush(stdout);
+                max_row_size, max_ncols);
+    printf("[%d].. BIG U size " IFMT " (on CPU)\n", iam, bigu_size);
+    fflush(stdout);
     }
 #endif
 
@@ -905,8 +902,8 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 
 #if ( PRNTlevel>=1 )
     if(iam == 0){
-        printf("[%d].. BIG V size " IFMT " (on CPU)\n", iam, bigv_size);
-        fflush(stdout);
+    printf("[%d].. BIG V size " IFMT " (on CPU)\n", iam, bigv_size);
+    fflush(stdout);
     }
 #endif
 
@@ -1311,13 +1308,8 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 /* #pragma omp parallel */ /* Sherry -- parallel done inside pzgstrs2 */
 #endif
 			{
-#if defined(USE_FUGAKU) && defined(OPT_pzgstrs2)
-                            pzgstrs2_fugaku (kk0, kk, Glu_persist, grid, Llu,
-                                        Ublock_info, stat);
-#else
                             pzgstrs2_omp (kk0, kk, Glu_persist, grid, Llu,
                                         Ublock_info, stat);
-#endif
                         }
 
                         pdgstrs2_timer += SuperLU_timer_()-ttt2;
@@ -1482,13 +1474,8 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 /* #pragma omp parallel */ /* Sherry -- parallel done inside pzgstrs2 */
 #endif
                 {
-#if defined(USE_FUGAKU) && defined(OPT_pzgstrs2)
-                    pzgstrs2_fugaku (k0, k, Glu_persist, grid, Llu, 
-		                    Ublock_info, stat);
-#else
                     pzgstrs2_omp (k0, k, Glu_persist, grid, Llu, 
 		                    Ublock_info, stat);
-#endif
                 }
                 pdgstrs2_timer += SuperLU_timer_() - ttt2;
 
@@ -1652,12 +1639,7 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
             double ttx =SuperLU_timer_();
 
 //#include "zlook_ahead_update_v4.c"
-#ifdef USE_FUGAKU
-#include "fugaku/zlook_ahead_update_fugaku.c"
-#endif
-#if !defined(USE_FUGAKU) 
 #include "zlook_ahead_update.c"
-#endif
 
             lookaheadupdatetimer += SuperLU_timer_() - ttx;
 /************************************************************************/
@@ -1759,15 +1741,14 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 #ifdef GPU_ACC /*-- GPU --*/
 
 #include "zSchCompUdt-cuda.c"
-#endif
+
+#else
 
 /*#include "SchCompUdt--Phi-2Ddynamic-alt.c"*/
 //#include "zSchCompUdt-2Ddynamic_v6.c"
-#ifdef USE_FUGAKU
-#include "fugaku/zSchCompUdt-2Ddynamic-fugaku.c"
-#endif
-#if !defined(GPU_ACC) && !defined(USE_FUGAKU)
+
 #include "zSchCompUdt-2Ddynamic.c"
+
 #endif
 	/*uncomment following to compare against SuperLU 3.3 baseline*/
         /* #include "SchCompUdt--baseline.c"  */
@@ -1985,11 +1966,11 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 	    //#include <float.h>
 	    //int Digs = DECIMAL_DIG;
 	    printf("gemm_count %d\n", gemm_count);
-	    // for (i = 0; i < gemm_count; ++i)
-		// fprintf(fgemm, "%8d%8d%8d\t %20.16e\t%8d\n", gemm_stats[i].m, gemm_stats[i].n,
-		// 	gemm_stats[i].k, gemm_stats[i].microseconds, prof_sendR[i]);
+	    for (i = 0; i < gemm_count; ++i)
+		fprintf(fgemm, "%8d%8d%8d\t %20.16e\t%8d\n", gemm_stats[i].m, gemm_stats[i].n,
+			gemm_stats[i].k, gemm_stats[i].microseconds, prof_sendR[i]);
 
-	    // fclose(fgemm);
+	    fclose(fgemm);
         }
 	SUPERLU_FREE(gemm_stats);
 	SUPERLU_FREE(prof_sendR);

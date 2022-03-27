@@ -15,6 +15,9 @@ set(headers
     TreeReduce_slu_impl.hpp	
     ${CMAKE_CURRENT_BINARY_DIR}/superlu_dist_config.h
     ${PROJECT_SOURCE_DIR}/SRC/superlu_FortranCInterface.h
+    superlu_defs_fugaku.h
+    superlu_zdefs_fugaku.h
+    utils.h
 )
 if (MSVC)
   list(APPEND headers wingetopt.h)
@@ -221,6 +224,7 @@ if(enable_complex16)
     pzgstrf.c
     zstatic_schedule.c
     pzgstrf2.c
+    pzgstrf2_fugaku.c
     pzgstrs.c
     pzgstrs1.c
     pzgstrs_lsum.c

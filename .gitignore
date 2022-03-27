@@ -11,3 +11,18 @@ build/*
 # not to commit any changes to the following file
 SRC/superlu_FortranCInterface.h
 FORTRAN/superlu_dist_config.fh
+
+build_cpu
+EXAMPLE/pddrive3d
+EXAMPLE/pddrive3d1
+EXAMPLE/pddrive3d2
+EXAMPLE/pddrive3d3
+EXAMPLE/pzdrive3d
+EXAMPLE/pzdrive3d1
+EXAMPLE/pzdrive3d2
+EXAMPLE/pzdrive3d3
+EXAMPLE/pzdrive3d3
+*.a
+/lib64
+*.o
+/include

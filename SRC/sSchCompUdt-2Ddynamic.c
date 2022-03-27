@@ -622,14 +622,14 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
 	    int* indirect_thread = indirect + (ldt + CACHELINE/i) * thread_id;
 	    int* indirect2_thread = indirect2 + (ldt + CACHELINE/i) * thread_id;
 
-#pragma omp for \
-    private (j,lb,rukp,iukp,jb,nsupc,ljb,lptr,ib,temp_nbrow,cum_nrow)	\
-    schedule(dynamic)
-#else /* not use _OPENMP */
+// #pragma omp for \
+//     private (j,lb,rukp,iukp,jb,nsupc,ljb,lptr,ib,temp_nbrow,cum_nrow)	\
+//     schedule(dynamic)
+// #else /* not use _OPENMP */
 	    thread_id = 0;
 	    int* indirect_thread = indirect;
 	    int* indirect2_thread = indirect2;
-#endif
+// #endif
 	    /* Each thread is assigned one loop index ij, responsible for
 	       block update L(lb,k) * U(k,j) -> tempv[]. */
 	    for (int ij = 0; ij < RemainBlk*(jj_cpu-jj0); ++ij) {
@@ -704,10 +704,6 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
 	RemainScatterTimer += SuperLU_timer_() - tt_start;
 #endif
 
-#ifdef USE_VTUNE
-	__itt_pause(); // stop VTune
-	__SSC_MARK(0x222); // stop SDE tracing
-#endif
 
     } /* end if Rnbrow>0 ... update remaining block */
 

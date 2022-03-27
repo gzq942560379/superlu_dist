@@ -1098,8 +1098,9 @@ extern int_t ancestorFactor(
 );
 
 /*== end 3D prototypes ===================*/
-
-
+#ifdef USE_FUGAKU
+#include "superlu_zdefs_fugaku.h"
+#endif
 #ifdef __cplusplus
   }
 #endif

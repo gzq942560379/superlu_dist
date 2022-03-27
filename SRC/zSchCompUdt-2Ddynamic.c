@@ -591,11 +591,6 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
 	tt_start = SuperLU_timer_();
 #endif
 
-#ifdef USE_VTUNE
-	__SSC_MARK(0x111);// start SDE tracing, note uses 2 underscores
-	__itt_resume(); // start VTune, again use 2 underscores
-#endif
-
 	/* Scatter into destination block-by-block. */
 #ifdef _OPENMP
 #pragma omp parallel default(shared) private(thread_id)
@@ -679,6 +674,16 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
 				Ufstnz_br_ptr, Unzval_br_ptr,
 				grid
 				);
+		    // zscatter_u_fugaku (
+			// 	ib, jb,
+			// 	nsupc, iukp, xsup,
+			// 	//klst, Rnbrow, /*** klst, temp_nbrow, Sherry */
+			// 	klst, gemm_m_pad, /*** klst, temp_nbrow, Sherry */
+			// 	lptr, temp_nbrow, /* row dimension of the block */
+			// 	lsub, usub, tempv1,
+			// 	Ufstnz_br_ptr, Unzval_br_ptr,
+			// 	grid
+			// 	);
 		} else {
 		    zscatter_l(
 			       ib, ljb,
@@ -691,6 +696,17 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
 			       Lrowind_bc_ptr,Lnzval_bc_ptr,
 			       grid
 			       );
+			// zscatter_l_fugaku(
+			//        ib, ljb,
+			//        nsupc, iukp, xsup,
+			//        //klst, temp_nbrow, Sherry
+			//        klst, gemm_m_pad, /*** temp_nbrow, Sherry */
+			//        lptr, temp_nbrow, /* row dimension of the block */
+			//        usub, lsub, tempv1,
+			//        indirect_thread, indirect2_thread,
+			//        Lrowind_bc_ptr,Lnzval_bc_ptr,
+			//        grid
+			//        );
 		}
 
 	    } /* end omp for (int ij =...) */
@@ -701,11 +717,6 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
 
 #if ( PRNTlevel>=1 )
 	RemainScatterTimer += SuperLU_timer_() - tt_start;
-#endif
-
-#ifdef USE_VTUNE
-	__itt_pause(); // stop VTune
-	__SSC_MARK(0x222); // stop SDE tracing
 #endif
 
     } /* end if Rnbrow>0 ... update remaining block */

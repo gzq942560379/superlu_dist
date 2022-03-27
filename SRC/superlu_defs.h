@@ -1302,6 +1302,10 @@ extern int_t reduceStat(PhaseType PHASE, SuperLUStat_t *stat, gridinfo3d_t * gri
 
 /*=====================*/
 
+#ifdef USE_FUGAKU
+#include "superlu_defs_fugaku.h"
+#endif
+
 #ifdef __cplusplus
   }
 #endif
