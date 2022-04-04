@@ -1098,7 +1098,9 @@ extern int_t ancestorFactor(
 );
 
 /*== end 3D prototypes ===================*/
-
+#ifdef USE_SW
+#include "sw/superlu_zdefs_sw.h"
+#endif
 
 #ifdef __cplusplus
   }

@@ -455,10 +455,10 @@ void Local_Zgstrf2(superlu_dist_options_t *options, int_t k, double thresh,
                 if ( slud_z_abs1(&lusup[i]) < thresh &&
 		     lusup[i].r != 0.0 && lusup[i].i != 0.0 ) { /* Diagonal */
 
-#if ( PRNTlevel>=2 )
-                    printf ("(%d) .. col %d, tiny pivot %e  ",
-                            iam, jfst + j, lusup[i]);
-#endif
+// #if ( PRNTlevel>=2 )
+//                     printf ("(%d) .. col %d, tiny pivot %e  ",
+//                             iam, jfst + j, lusup[i]);
+// #endif
                 /* Keep the new diagonal entry with the same sign. */
                 if ( lusup[i].r < 0 ) lusup[i].r = -thresh;
                 else lusup[i].r = thresh;

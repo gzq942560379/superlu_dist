@@ -27,6 +27,10 @@
 #######################################################################
 include ../make.inc
 
+DSUPERLULIB = libsuperlu_dist.a
+
+INCLUDEDIR += -I$(SUPERLU_ROOT)/SRC
+
 # FACT3D = 	scatter.o
 #	pdgstrs_vecpar.o ancFactorization.o
 
@@ -35,64 +39,104 @@ include ../make.inc
 #
 # Precision independent routines
 #
-ALLAUX 	= sp_ienv.o etree.o sp_colorder.o get_perm_c.o \
-	  colamd.o mmd.o comm.o memory.o util.o superlu_grid.o \
-	  pxerr_dist.o superlu_timer.o symbfact.o \
-	  psymbfact.o psymbfact_util.o get_perm_c_parmetis.o mc64ad_dist.o \
-	  xerr_dist.o smach_dist.o dmach_dist.o \
-	  superlu_dist_version.o TreeInterface.o
+ALLAUX 	= sp_ienv.c etree.c sp_colorder.c get_perm_c.c \
+	  colamd.c mmd.c comm.c memory.c util.c superlu_grid.c \
+	  pxerr_dist.c superlu_timer.c symbfact.c \
+	  psymbfact.c psymbfact_util.c get_perm_c_parmetis.c mc64ad_dist.c \
+	  xerr_dist.c smach_dist.c dmach_dist.c \
+	  superlu_dist_version.c 
 # Following are from 3D code
-ALLAUX += superlu_grid3d.o supernodal_etree.o supernodalForest.o \
-	trfAux.o communication_aux.o treeFactorization.o sec_structs.o
+ALLAUX += superlu_grid3d.c supernodal_etree.c supernodalForest.c \
+	trfAux.c communication_aux.c treeFactorization.c sec_structs.c
 
+ALLAUXCPP = TreeInterface.cpp
 #
 # Routines literally taken from SuperLU, but renamed with suffix _dist
 #
-DSLUSRC	= dlangs_dist.o dgsequ_dist.o dlaqgs_dist.o dutil_dist.o \
-	  dmemory_dist.o dmyblas2_dist.o dsp_blas2_dist.o dsp_blas3_dist.o
-ZSLUSRC	= dcomplex_dist.o zlangs_dist.o zgsequ_dist.o zlaqgs_dist.o \
-	  zutil_dist.o zmemory_dist.o zmyblas2_dist.o \
-	  zsp_blas2_dist.o zsp_blas3_dist.o
+DSLUSRC	= dlangs_dist.c dgsequ_dist.c dlaqgs_dist.c dutil_dist.c \
+	  dmemory_dist.c dmyblas2_dist.c dsp_blas2_dist.c dsp_blas3_dist.c
+ZSLUSRC	= dcomplex_dist.c zlangs_dist.c zgsequ_dist.c zlaqgs_dist.c \
+	  zutil_dist.c zmemory_dist.c zmyblas2_dist.c \
+	  zsp_blas2_dist.c zsp_blas3_dist.c
 
 #
 # Routines for double precision parallel SuperLU
-DPLUSRC = pdgssvx.o pdgssvx_ABglobal.o \
-	  dreadhb.o dreadrb.o dreadtriple.o dreadMM.o dbinary_io.o \
-	  pdgsequ.o pdlaqgs.o dldperm_dist.o pdlangs.o pdutil.o \
-	  pdsymbfact_distdata.o ddistribute.o pddistribute.o \
-	  pdgstrf.o dstatic_schedule.o pdgstrf2.o pdGetDiagU.o \
-	  pdgstrs.o pdgstrs1.o pdgstrs_lsum.o pdgstrs_Bglobal.o \
-	  pdgsrfs.o pdgsmv.o pdgsrfs_ABXglobal.o pdgsmv_AXglobal.o \
-	  dreadtriple_noheader.o dsuperlu_blas.o
+DPLUSRC = pdgssvx.c pdgssvx_ABglobal.c \
+	  dreadhb.c dreadrb.c dreadtriple.c dreadMM.c dbinary_io.c \
+	  pdgsequ.c pdlaqgs.c dldperm_dist.c pdlangs.c pdutil.c \
+	  pdsymbfact_distdata.c ddistribute.c pddistribute.c \
+	  pdgstrf.c dstatic_schedule.c pdgstrf2.c pdGetDiagU.c \
+	  pdgstrs.c pdgstrs1.c pdgstrs_lsum.c pdgstrs_Bglobal.c \
+	  pdgsrfs.c pdgsmv.c pdgsrfs_ABXglobal.c pdgsmv_AXglobal.c \
+	  dreadtriple_noheader.c dsuperlu_blas.c
 # from 3D code
-DPLUSRC += pdgssvx3d.o pdgstrf3d.o dtreeFactorization.o dscatter3d.o \
-	dgather.o pd3dcomm.o dtrfAux.o dcommunication_aux.o dtrfCommWrapper.o \
-	dnrformat_loc3d.o dtreeFactorizationGPU.o ##$(FACT3D)
+DPLUSRC += pdgssvx3d.c pdgstrf3d.c dtreeFactorization.c dscatter3d.c \
+	dgather.c pd3dcomm.c dtrfAux.c dcommunication_aux.c dtrfCommWrapper.c \
+	dnrformat_loc3d.c dtreeFactorizationGPU.c ##$(FACT3D)
 
 #
 # Routines for double complex parallel SuperLU
-ZPLUSRC = pzgssvx.o pzgssvx_ABglobal.o \
-	  zreadhb.o zreadrb.o zreadtriple.o zreadMM.o zbinary_io.o\
-	  pzgsequ.o pzlaqgs.o zldperm_dist.o pzlangs.o pzutil.o \
-	  pzsymbfact_distdata.o zdistribute.o pzdistribute.o \
-	  pzgstrf.o zstatic_schedule.o pzgstrf2.o pzGetDiagU.o \
-	  pzgstrs.o pzgstrs1.o pzgstrs_lsum.o pzgstrs_Bglobal.o \
-	  pzgsrfs.o pzgsmv.o pzgsrfs_ABXglobal.o pzgsmv_AXglobal.o \
-	  zreadtriple_noheader.o zsuperlu_blas.o
+ZPLUSRC = pzgssvx.c pzgssvx_ABglobal.c \
+	  zreadhb.c zreadrb.c zreadtriple.c zreadMM.c zbinary_io.c\
+	  pzgsequ.c pzlaqgs.c zldperm_dist.c pzlangs.c pzutil.c \
+	  pzsymbfact_distdata.c zdistribute.c pzdistribute.c \
+	  pzgstrf.c zstatic_schedule.c pzgstrf2.c pzGetDiagU.c \
+	  pzgstrs.c pzgstrs1.c pzgstrs_lsum.c pzgstrs_Bglobal.c \
+	  pzgsrfs.c pzgsmv.c pzgsrfs_ABXglobal.c pzgsmv_AXglobal.c \
+	  zreadtriple_noheader.c zsuperlu_blas.c
 # from 3D code
-ZPLUSRC += pzgssvx3d.o pzgstrf3d.o ztreeFactorization.o zscatter3d.o \
-	zgather.o pz3dcomm.o ztrfAux.o zcommunication_aux.o ztrfCommWrapper.o \
-	znrformat_loc3d.o ztreeFactorizationGPU.o ##$(FACT3D)
+ZPLUSRC += pzgssvx3d.c pzgstrf3d.c ztreeFactorization.c zscatter3d.c \
+	zgather.c pz3dcomm.c ztrfAux.c zcommunication_aux.c ztrfCommWrapper.c \
+	znrformat_loc3d.c ztreeFactorizationGPU.c ##$(FACT3D)
 
-ifeq ($(HAVE_CUDA),TRUE)
-ALLAUX += cublas_utils.o superlu_gpu_utils.o
-DPLUSRC += dsuperlu_gpu.o
-ZPLUSRC += zsuperlu_gpu.o
-endif
+# ifeq ($(HAVE_CUDA),TRUE)
+# ALLAUX += cublas_utils.o superlu_gpu_utils.o
+# DPLUSRC += dsuperlu_gpu.o
+# ZPLUSRC += zsuperlu_gpu.o
+# endif
 
-ifeq ($(HAVE_COMBBLAS),TRUE)
-DPLUSRC += d_c2cpp_GetHWPM.o
-ZPLUSRC += z_c2cpp_GetHWPM.o
+# ifeq ($(HAVE_COMBBLAS),TRUE)
+# DPLUSRC += d_c2cpp_GetHWPM.o
+# ZPLUSRC += z_c2cpp_GetHWPM.o
+# endif
+
+PZGSTRF_SRC = pzgstrf.c zSchCompUdt-2Ddynamic.c zlook_ahead_update.c
+PDGSTRF_SRC = pdgstrf.c dlook_ahead_update.c dSchCompUdt-2Ddynamic.c
+     
+
+ALLAUXOBJ=$(patsubst %.c, %.o, $(ALLAUX))
+ALLAUXCPPOBJ=$(patsubst %.cpp, %.o, $(ALLAUXCPP))
+DSLUOBJ=$(patsubst %.c, %.o, $(DSLUSRC))
+ZSLUOBJ=$(patsubst %.c, %.o, $(ZSLUSRC))
+DPLUOBJ=$(patsubst %.c, %.o, $(DPLUSRC))
+ZPLUOBJ=$(patsubst %.c, %.o, $(ZPLUSRC))
+
+ALLCOBJ = ${ALLAUXOBJ} ${DSLUOBJ} ${ZSLUOBJ} ${DPLUOBJ} ${ZPLUOBJ}
+ALLCPPOBJ = ${ALLAUXCPPOBJ}
+
+ifeq ($(HAVE_SW), TRUE)
+	HOST_DPLUDIR = sw/host/double
+	HOST_ZPLUDIR = sw/host/doublecomplex
+	SLAVE_DPLUDIR = sw/slave/double
+	SLAVE_ZPLUDIR = sw/slave/doublecomplex
+
+	HOST_DPLUSRC = $(shell find $(HOST_DPLUDIR) -name "*.c")
+	HOST_ZPLUSRC = $(shell find $(HOST_ZPLUDIR) -name "*.c")
+	SLAVE_DPLUSRC = $(shell find $(SLAVE_DPLUDIR) -name "*.c")
+	SLAVE_ZPLUSRC = $(shell find $(SLAVE_ZPLUDIR) -name "*.c")
+
+	HOST_DPLUOBJ = $(patsubst %.c, %.o, $(HOST_DPLUSRC))
+	HOST_ZPLUOBJ = $(patsubst %.c, %.o, $(HOST_ZPLUSRC))
+	SLAVE_DPLUOBJ = $(patsubst %.c, %.o, $(SLAVE_DPLUSRC))
+	SLAVE_ZPLUOBJ = $(patsubst %.c, %.o, $(SLAVE_ZPLUSRC))
+
+	HOST_OBJ = ${HOST_DPLUOBJ} ${HOST_ZPLUOBJ}
+	SLAVE_OBJ = ${SLAVE_DPLUOBJ} ${SLAVE_ZPLUOBJ}
+	
+	ALLCOBJ += ${HOST_OBJ}
+
+	PZGSTRF_SRC += sw/host/zlook_ahead_update_sw.c sw/host/zSchCompUdt-2Ddynamic-sw.c 
+	PDGSTRF_SRC += 
 endif
 
 all:  double complex16
@@ -125,33 +169,48 @@ endif
 #config_h:
 #	cp -f superlu_dist_config_for_makefile.h superlu_dist_config.h
 
-double: config_h $(DSLUSRC) $(DPLUSRC) $(ALLAUX)
+double: config_h $(DSLUOBJ) $(DPLUOBJ) $(ALLAUXOBJ) $(ALLCPPOBJ) ${HOST_DPLUOBJ} ${SLAVE_DPLUOBJ}
 	$(ARCH) $(ARCHFLAGS) $(DSUPERLULIB) \
-		$(DSLUSRC) $(DPLUSRC) $(ALLAUX)
+		$(DSLUOBJ) $(DPLUOBJ) $(ALLAUXOBJ) $(ALLCPPOBJ) ${HOST_DPLUOBJ} ${SLAVE_DPLUOBJ}
 	$(RANLIB) $(DSUPERLULIB)
 
-complex16: config_h $(ZSLUSRC) $(ZPLUSRC) $(ALLAUX)
+complex16: config_h $(ZSLUOBJ) $(ZPLUOBJ) $(ALLAUXOBJ) $(ALLCPPOBJ) ${HOST_ZPLUOBJ} ${SLAVE_ZPLUOBJ}
 	$(ARCH) $(ARCHFLAGS) $(DSUPERLULIB) \
-		$(ZSLUSRC) $(ZPLUSRC) $(ALLAUX)
+		$(ZSLUOBJ) $(ZPLUOBJ) $(ALLAUXOBJ) $(ALLCPPOBJ) ${HOST_ZPLUOBJ} ${SLAVE_ZPLUOBJ}
 	$(RANLIB) $(DSUPERLULIB)
 
-pdgstrf.o: dscatter.c dlook_ahead_update.c dSchCompUdt-2Ddynamic.c pdgstrf.c
-	$(CC) $(CFLAGS) $(CDEFS) $(BLASDEF) -I$(INCLUDEDIR) -c pdgstrf.c $(VERBOSE)
+pdgstrf.o: $(PDGSTRF_SRC)
+	$(CC) $(CFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c pdgstrf.c $(VERBOSE)
 
-pzgstrf.o: zscatter.c zlook_ahead_update.c zSchCompUdt-2Ddynamic.c pzgstrf.c
-	$(CC) $(CFLAGS) $(CDEFS) $(BLASDEF) -I$(INCLUDEDIR) -c pzgstrf.c $(VERBOSE)
+pzgstrf.o: $(PZGSTRF_SRC)
+	$(CC) $(CFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c pzgstrf.c $(VERBOSE)
 
-.c.o:
-	$(CC) $(CFLAGS) $(CDEFS) $(BLASDEF) -I$(INCLUDEDIR) -c $< $(VERBOSE)
+${ALLCOBJ} : %.o : %.c
+	$(CC) $(CFLAGS) $(SW_HOST_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE) -o $@
 
-.cu.o:
-	$(NVCC) $(NVCCFLAGS) $(CDEFS) $(BLASDEF) -I$(INCLUDEDIR) -c $< $(VERBOSE)
+${ALLCPPOBJ} : %.o : %.cpp
+	$(CXX) $(CFLAGS) $(SW_HOST_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE) -o $@
+# %.o : %.cpp
+# 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE)
 
-.cpp.o:
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(CDEFS) $(BLASDEF) -I$(INCLUDEDIR) -c $< $(VERBOSE)
+# %.o : %.f
+# 	$(FORTRAN) $(FFLAGS) -c $< $(VERBOSE)
 
-.f.o:
-	$(FORTRAN) $(FFLAGS) -c $< $(VERBOSE)
+# ${HOST_C_OBJ} : %.o : %.c
+# 	$(CC) $(CFLAGS) $(SW_HOST_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE) -o $@
+
+${SLAVE_OBJ} : %.o : %.c
+	$(CC) $(CFLAGS) $(SW_SLAVE_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE) -o $@
+
+header_file=$(shell find . -name "*.h")
+
+install: 
+	mkdir -p $(INCLUDE_DIR)
+	mkdir -p $(LIB_DIR)
+	cp --path $(header_file) $(INCLUDE_DIR)
+	cp $(DSUPERLULIB) $(LIB_DIR)
+
+all_obj = $(shell find . -name "*.o")
 
 clean:	
-	rm -f *.o $(DSUPERLULIB) superlu_dist_config.h
+	rm -f $(all_obj) $(DSUPERLULIB) superlu_dist_config.h

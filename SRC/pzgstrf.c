@@ -106,7 +106,8 @@ at the top-level directory.
  *
  * </pre>
  */
-
+#include <assert.h>  /* assertion doesn't work if NDEBUG is defined */
+#include <stdbool.h> 
 #include <math.h>
 #include "superlu_zdefs.h"
 
@@ -115,6 +116,9 @@ at the top-level directory.
 /*#include "cublas_zgemm.h"*/
 // #define NUM_CUDA_STREAMS 16
 // #define NUM_CUDA_STREAMS 16
+#endif
+#ifdef USE_SW
+#include "sw/slave_kernel.h"
 #endif
 
 /* Various defininations     */
@@ -1304,8 +1308,13 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 /* #pragma omp parallel */ /* Sherry -- parallel done inside pzgstrs2 */
 #endif
 			{
+#if defined(USE_SW) && defined(OPT_pzgstrs2)
+                            sw_pzgstrs2 (kk0, kk, Glu_persist, grid, Llu,
+                                        Ublock_info, stat);
+#else
                             pzgstrs2_omp (kk0, kk, Glu_persist, grid, Llu,
                                         Ublock_info, stat);
+#endif
                         }
 
                         pdgstrs2_timer += SuperLU_timer_()-ttt2;
@@ -1470,8 +1479,13 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 /* #pragma omp parallel */ /* Sherry -- parallel done inside pzgstrs2 */
 #endif
                 {
+#if defined(USE_SW) && defined(OPT_pzgstrs2)
+                    sw_pzgstrs2 (k0, k, Glu_persist, grid, Llu, 
+		                    Ublock_info, stat);
+#else
                     pzgstrs2_omp (k0, k, Glu_persist, grid, Llu, 
 		                    Ublock_info, stat);
+#endif
                 }
                 pdgstrs2_timer += SuperLU_timer_() - ttt2;
 
@@ -1738,13 +1752,16 @@ pzgstrf(superlu_dist_options_t * options, int m, int n, double anorm,
 
 #include "zSchCompUdt-cuda.c"
 
-#else
+#endif
 
+#ifdef USE_SW
+#include "sw/host/zSchCompUdt-2Ddynamic-sw.c"
+#endif
 /*#include "SchCompUdt--Phi-2Ddynamic-alt.c"*/
 //#include "zSchCompUdt-2Ddynamic_v6.c"
 
+#if !defined(GPU_ACC) && !defined(USE_SW)
 #include "zSchCompUdt-2Ddynamic.c"
-
 #endif
 	/*uncomment following to compare against SuperLU 3.3 baseline*/
         /* #include "SchCompUdt--baseline.c"  */
