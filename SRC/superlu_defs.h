@@ -1302,6 +1302,10 @@ extern int_t reduceStat(PhaseType PHASE, SuperLUStat_t *stat, gridinfo3d_t * gri
 
 /*=====================*/
 
+#ifdef USE_SW
+#include "sw/superlu_defs_sw.h"
+#endif
+
 #ifdef __cplusplus
   }
 #endif
