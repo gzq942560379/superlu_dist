@@ -139,9 +139,9 @@ typedef MPI_C_DOUBLE_COMPLEX  SuperLU_MPI_DOUBLE_COMPLEX;
 #include <cuda.h>
 #endif
 
-
+#ifndef MAX_SUPER_SIZE
 #define MAX_SUPER_SIZE 512   /* Sherry: moved from superlu_gpu.cu */
-
+#endif
 
 #define ISORT     /* NOTE: qsort() has bug on Mac */
 
@@ -1301,10 +1301,6 @@ extern int_t reduceStat(PhaseType PHASE, SuperLUStat_t *stat, gridinfo3d_t * gri
   extern int get_mpi_process_per_gpu ();
 
 /*=====================*/
-
-#ifdef USE_SW
-#include "sw/superlu_defs_sw.h"
-#endif
 
 #ifdef __cplusplus
   }

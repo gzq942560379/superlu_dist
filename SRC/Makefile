@@ -63,9 +63,9 @@ ZSLUSRC	= dcomplex_dist.c zlangs_dist.c zgsequ_dist.c zlaqgs_dist.c \
 # Routines for double precision parallel SuperLU
 DPLUSRC = pdgssvx.c pdgssvx_ABglobal.c \
 	  dreadhb.c dreadrb.c dreadtriple.c dreadMM.c dbinary_io.c \
-	  pdgsequ.c pdlaqgs.c dldperm_dist.c pdlangs.c pdutil.c \
-	  pdsymbfact_distdata.c ddistribute.c pddistribute.c \
-	  pdgstrf.c dstatic_schedule.c pdgstrf2.c pdGetDiagU.c \
+	  pdgsequ.c pdlaqgs.c dldperm_dist.c pdlangs.c \
+	  ddistribute.c pddistribute.c \
+      dstatic_schedule.c pdgstrf2.c pdGetDiagU.c \
 	  pdgstrs.c pdgstrs1.c pdgstrs_lsum.c pdgstrs_Bglobal.c \
 	  pdgsrfs.c pdgsmv.c pdgsrfs_ABXglobal.c pdgsmv_AXglobal.c \
 	  dreadtriple_noheader.c dsuperlu_blas.c
@@ -78,12 +78,12 @@ DPLUSRC += pdgssvx3d.c pdgstrf3d.c dtreeFactorization.c dscatter3d.c \
 # Routines for double complex parallel SuperLU
 ZPLUSRC = pzgssvx.c pzgssvx_ABglobal.c \
 	  zreadhb.c zreadrb.c zreadtriple.c zreadMM.c zbinary_io.c\
-	  pzgsequ.c pzlaqgs.c zldperm_dist.c pzlangs.c pzutil.c \
-	  pzsymbfact_distdata.c zdistribute.c pzdistribute.c \
-	  pzgstrf.c zstatic_schedule.c pzgstrf2.c pzGetDiagU.c \
+	  pzgsequ.c pzlaqgs.c zldperm_dist.c pzlangs.c \
+	  zdistribute.c pzdistribute.c \
+	  zstatic_schedule.c pzgstrf2.c pzGetDiagU.c \
 	  pzgstrs.c pzgstrs1.c pzgstrs_lsum.c pzgstrs_Bglobal.c \
 	  pzgsrfs.c pzgsmv.c pzgsrfs_ABXglobal.c pzgsmv_AXglobal.c \
-	  zreadtriple_noheader.c zsuperlu_blas.c
+	  zreadtriple_noheader.c zsuperlu_blas.c zscatter.c
 # from 3D code
 ZPLUSRC += pzgssvx3d.c pzgstrf3d.c ztreeFactorization.c zscatter3d.c \
 	zgather.c pz3dcomm.c ztrfAux.c zcommunication_aux.c ztrfCommWrapper.c \
@@ -100,9 +100,43 @@ ZPLUSRC += pzgssvx3d.c pzgstrf3d.c ztreeFactorization.c zscatter3d.c \
 # ZPLUSRC += z_c2cpp_GetHWPM.o
 # endif
 
-PZGSTRF_SRC = pzgstrf.c zSchCompUdt-2Ddynamic.c zlook_ahead_update.c
-PDGSTRF_SRC = pdgstrf.c dlook_ahead_update.c dSchCompUdt-2Ddynamic.c
-     
+PZGSTRF_DEP = pzgstrf.c zSchCompUdt-2Ddynamic.c zlook_ahead_update.c
+PZGSTRF_SRC = pzgstrf.c 
+
+PDGSTRF_DEP = pdgstrf.c dlook_ahead_update.c dSchCompUdt-2Ddynamic.c
+PDGSTRF_SRC = pdgstrf.c
+
+ifeq ($(HAVE_SW), TRUE)
+	HOST_COMMONDIR = sw/host/common
+	HOST_DPLUDIR = sw/host/double
+	HOST_ZPLUDIR = sw/host/doublecomplex
+	SLAVE_DPLUDIR = sw/slave/double
+	SLAVE_ZPLUDIR = sw/slave/doublecomplex
+
+	HOST_ALLAUXSRC = $(shell find $(HOST_COMMONDIR) -name "*.c")
+	HOST_DPLUSRC = $(shell find $(HOST_DPLUDIR) -name "*.c")
+	HOST_ZPLUSRC = $(shell find $(HOST_ZPLUDIR) -name "*.c")
+	SLAVE_DPLUSRC = $(shell find $(SLAVE_DPLUDIR) -name "*.c")
+	SLAVE_ZPLUSRC = $(shell find $(SLAVE_ZPLUDIR) -name "*.c")
+
+	HOST_ALLAUXOBJ = $(patsubst %.c, %.o, $(HOST_ALLAUXSRC))
+	HOST_DPLUOBJ = $(patsubst %.c, %.o, $(HOST_DPLUSRC))
+	HOST_ZPLUOBJ = $(patsubst %.c, %.o, $(HOST_ZPLUSRC))
+	SLAVE_DPLUOBJ = $(patsubst %.c, %.o, $(SLAVE_DPLUSRC))
+	SLAVE_ZPLUOBJ = $(patsubst %.c, %.o, $(SLAVE_ZPLUSRC))
+
+	HOST_OBJ = ${HOST_ALLAUXOBJ} ${HOST_DPLUOBJ} ${HOST_ZPLUOBJ}
+	SLAVE_OBJ = ${SLAVE_DPLUOBJ} ${SLAVE_ZPLUOBJ}
+	
+	PZGSTRF_DEP = sw/host/pzgstrf.c sw/host/zSchCompUdt-2Ddynamic.c sw/host/zlook_ahead_update.c
+	PZGSTRF_SRC = sw/host/pzgstrf.c 
+else
+	DPLUSRC += pdsymbfact_distdata.c pdutil.c
+	ZPLUSRC += pzsymbfact_distdata.c pzutil.c
+endif
+
+PDGSTRF_OBJ = $(patsubst %.c, %.o, $(PDGSTRF_SRC))
+PZGSTRF_OBJ = $(patsubst %.c, %.o, $(PZGSTRF_SRC))
 
 ALLAUXOBJ=$(patsubst %.c, %.o, $(ALLAUX))
 ALLAUXCPPOBJ=$(patsubst %.cpp, %.o, $(ALLAUXCPP))
@@ -111,33 +145,8 @@ ZSLUOBJ=$(patsubst %.c, %.o, $(ZSLUSRC))
 DPLUOBJ=$(patsubst %.c, %.o, $(DPLUSRC))
 ZPLUOBJ=$(patsubst %.c, %.o, $(ZPLUSRC))
 
-ALLCOBJ = ${ALLAUXOBJ} ${DSLUOBJ} ${ZSLUOBJ} ${DPLUOBJ} ${ZPLUOBJ}
+ALLCOBJ = ${ALLAUXOBJ} ${DSLUOBJ} ${ZSLUOBJ} ${DPLUOBJ} ${ZPLUOBJ} ${HOST_OBJ} ${HOST_ALLAUXOBJ}
 ALLCPPOBJ = ${ALLAUXCPPOBJ}
-
-ifeq ($(HAVE_SW), TRUE)
-	HOST_DPLUDIR = sw/host/double
-	HOST_ZPLUDIR = sw/host/doublecomplex
-	SLAVE_DPLUDIR = sw/slave/double
-	SLAVE_ZPLUDIR = sw/slave/doublecomplex
-
-	HOST_DPLUSRC = $(shell find $(HOST_DPLUDIR) -name "*.c")
-	HOST_ZPLUSRC = $(shell find $(HOST_ZPLUDIR) -name "*.c")
-	SLAVE_DPLUSRC = $(shell find $(SLAVE_DPLUDIR) -name "*.c")
-	SLAVE_ZPLUSRC = $(shell find $(SLAVE_ZPLUDIR) -name "*.c")
-
-	HOST_DPLUOBJ = $(patsubst %.c, %.o, $(HOST_DPLUSRC))
-	HOST_ZPLUOBJ = $(patsubst %.c, %.o, $(HOST_ZPLUSRC))
-	SLAVE_DPLUOBJ = $(patsubst %.c, %.o, $(SLAVE_DPLUSRC))
-	SLAVE_ZPLUOBJ = $(patsubst %.c, %.o, $(SLAVE_ZPLUSRC))
-
-	HOST_OBJ = ${HOST_DPLUOBJ} ${HOST_ZPLUOBJ}
-	SLAVE_OBJ = ${SLAVE_DPLUOBJ} ${SLAVE_ZPLUOBJ}
-	
-	ALLCOBJ += ${HOST_OBJ}
-
-	PZGSTRF_SRC += sw/host/zlook_ahead_update_sw.c sw/host/zSchCompUdt-2Ddynamic-sw.c 
-	PDGSTRF_SRC += 
-endif
 
 all:  double complex16
 
@@ -169,27 +178,37 @@ endif
 #config_h:
 #	cp -f superlu_dist_config_for_makefile.h superlu_dist_config.h
 
-double: config_h $(DSLUOBJ) $(DPLUOBJ) $(ALLAUXOBJ) $(ALLCPPOBJ) ${HOST_DPLUOBJ} ${SLAVE_DPLUOBJ}
+double: config_h $(DSLUOBJ) $(DPLUOBJ) $(ALLAUXOBJ) ${HOST_ALLAUXOBJ} $(ALLCPPOBJ)  ${HOST_DPLUOBJ} ${PDGSTRF_OBJ} ${SLAVE_DPLUOBJ} 
 	$(ARCH) $(ARCHFLAGS) $(DSUPERLULIB) \
-		$(DSLUOBJ) $(DPLUOBJ) $(ALLAUXOBJ) $(ALLCPPOBJ) ${HOST_DPLUOBJ} ${SLAVE_DPLUOBJ}
+		$(DSLUOBJ) $(DPLUOBJ) $(ALLAUXOBJ) ${HOST_ALLAUXOBJ} $(ALLCPPOBJ) ${HOST_DPLUOBJ} ${PDGSTRF_OBJ} ${SLAVE_DPLUOBJ} 
 	$(RANLIB) $(DSUPERLULIB)
 
-complex16: config_h $(ZSLUOBJ) $(ZPLUOBJ) $(ALLAUXOBJ) $(ALLCPPOBJ) ${HOST_ZPLUOBJ} ${SLAVE_ZPLUOBJ}
+complex16: config_h $(ZSLUOBJ) $(ZPLUOBJ) $(ALLAUXOBJ) ${HOST_ALLAUXOBJ} $(ALLCPPOBJ) ${HOST_ZPLUOBJ} ${PZGSTRF_OBJ} ${SLAVE_ZPLUOBJ} 
 	$(ARCH) $(ARCHFLAGS) $(DSUPERLULIB) \
-		$(ZSLUOBJ) $(ZPLUOBJ) $(ALLAUXOBJ) $(ALLCPPOBJ) ${HOST_ZPLUOBJ} ${SLAVE_ZPLUOBJ}
+		$(ZSLUOBJ) $(ZPLUOBJ) $(ALLAUXOBJ) ${HOST_ALLAUXOBJ} $(ALLCPPOBJ) ${HOST_ZPLUOBJ} ${PZGSTRF_OBJ} ${SLAVE_ZPLUOBJ} 
 	$(RANLIB) $(DSUPERLULIB)
 
-pdgstrf.o: $(PDGSTRF_SRC)
-	$(CC) $(CFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c pdgstrf.c $(VERBOSE)
+$(PDGSTRF_OBJ): $(PDGSTRF_DEP)
+	$(CC) $(CFLAGS) $(SW_HOST_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $(PDGSTRF_SRC) $(VERBOSE) -o $@
 
-pzgstrf.o: $(PZGSTRF_SRC)
-	$(CC) $(CFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c pzgstrf.c $(VERBOSE)
+$(PZGSTRF_OBJ): $(PZGSTRF_DEP)
+	$(CC) $(CFLAGS) $(SW_HOST_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $(PZGSTRF_SRC) $(VERBOSE) -o $@
+
+# pdgstrf.o: $(PDGSTRF_SRC)
+# 	$(CC) $(CFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c pdgstrf.c $(VERBOSE)
+
+# pzgstrf.o: $(PZGSTRF_SRC)
+# 	$(CC) $(CFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c pzgstrf.c $(VERBOSE)
 
 ${ALLCOBJ} : %.o : %.c
 	$(CC) $(CFLAGS) $(SW_HOST_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE) -o $@
 
 ${ALLCPPOBJ} : %.o : %.cpp
 	$(CXX) $(CFLAGS) $(SW_HOST_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE) -o $@
+
+${SLAVE_OBJ} : %.o : %.c
+	$(CC) $(CFLAGS) $(SW_SLAVE_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE) -o $@
+	
 # %.o : %.cpp
 # 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE)
 
@@ -199,10 +218,9 @@ ${ALLCPPOBJ} : %.o : %.cpp
 # ${HOST_C_OBJ} : %.o : %.c
 # 	$(CC) $(CFLAGS) $(SW_HOST_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE) -o $@
 
-${SLAVE_OBJ} : %.o : %.c
-	$(CC) $(CFLAGS) $(SW_SLAVE_FLAGS) $(CDEFS) $(BLASDEF) $(INCLUDEDIR) -c $< $(VERBOSE) -o $@
 
-header_file=$(shell find . -name "*.h")
+
+header_file = $(shell find . -name "*.h")
 
 install: 
 	mkdir -p $(INCLUDE_DIR)

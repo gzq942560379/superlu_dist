@@ -33,7 +33,11 @@ at the top-level directory.
  * History:
  */
 
+#ifdef USE_SW
+#include "sw/superlu_defs_ex.h"
+#else
 #include "superlu_defs.h"
+#endif
 #include "dcomplex.h"
 
 /* 
@@ -180,6 +184,14 @@ typedef struct {
     int_t nleaf;
     int_t nfrecvmod;
     int_t inv; /* whether the diagonal block is inverted*/
+
+#ifdef USE_SW
+    egraph_t* graph; // global dependent graph (u->v) u update v;
+    egraph_t* graph_r; // reverse global dependent graph (u->v) u denpendent v;
+    bcast_t* LB;
+    bcast_t* UB;
+#endif
+
 } zLocalLU_t;
 
 
@@ -1098,9 +1110,6 @@ extern int_t ancestorFactor(
 );
 
 /*== end 3D prototypes ===================*/
-#ifdef USE_SW
-#include "sw/superlu_zdefs_sw.h"
-#endif
 
 #ifdef __cplusplus
   }

@@ -41,6 +41,8 @@ at the top-level directory.
  * Internal protypes
  */
 
+#define PRNTlevel 0
+
 static int_t *
 intMalloc_symbfact(int_t );
 
